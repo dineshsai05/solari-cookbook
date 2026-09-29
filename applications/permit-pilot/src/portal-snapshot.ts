@@ -14,7 +14,7 @@ export const ReviewSchema = z.object({
 export const AttachmentSchema = z.object({
   key: z.string().min(1).max(80), label: z.string().max(200), name: z.string().max(200), url: z.string().url(),
   void: z.boolean(), keyTimestampHint: z.string().nullable(),
-  downloaded: z.object({ id: z.string(), role: z.string(), sha256: z.string().length(64), bytes: z.number().int(), matchesPinned: z.boolean() }).nullable(),
+  downloaded: z.object({ id: z.string(), role: z.string(), sha256: z.string().length(64), bytes: z.number().int(), matchesPinned: z.boolean().nullable() }).nullable(),
 });
 export const SnapshotSchema = z.object({
   version: z.literal(1), capturedAt: z.string(), permitNumber: z.string(), portalUrl: z.string().url(), sessionId: z.string().nullable(),

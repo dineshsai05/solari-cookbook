@@ -12,6 +12,24 @@ import { parseAttachmentKey, SnapshotSchema, type Attachment, type Review, type 
 export interface PortalCase {
   name: string; authority: string; origin: string; searchPath: string; permitNumber: string; expectedSiteAddress: string; qualifiedAt: string; notes?: string;
   attachments: { id: string; match: string; role: string; sha256: string; pages: number }[];
+  /** When no attachments are pinned, pick applicant responses and recent drawings from the page. */
+  autoAttachments?: boolean;
+}
+export interface AttachmentTarget { attachment: Attachment; id: string; role: string; pin: PortalCase['attachments'][number] | null }
+const slug = (s: string) => s.toLowerCase().replace(/\.pdf$/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'file';
+const sheetToken = (s: string) => /\b([A-Z]{1,3})-?0*(\d{1,3})\b/i.exec(s)?.slice(1, 3).map(x => x.toUpperCase()).join('-') ?? null;
+/** Chooses which listed attachments to download when nothing is pinned: every applicant response, the newest drawings, and the VOID revisions they superseded. Bounded and deterministic. */
+export function selectAttachments(list: Attachment[], max = 6): AttachmentTarget[] {
+  const isResponse = (a: Attachment) => /answer|response|resubmit|reply|comment/i.test(`${a.label} ${a.name}`);
+  const isDrawing = (a: Attachment) => /plan|sheet|drawing|structural|site|elevation|\brev\b|\b[A-Z]{1,3}-?\d{1,3}\b/i.test(`${a.label} ${a.name}`);
+  const newest = (a: Attachment, b: Attachment) => (b.keyTimestampHint ?? '').localeCompare(a.keyTimestampHint ?? '');
+  const chosen: AttachmentTarget[] = []; const used = new Set<string>(); const ids = new Set<string>();
+  const add = (a: Attachment, role: string) => { if (chosen.length >= max || used.has(a.key)) return; used.add(a.key); let id = slug(a.name); let n = 2; while (ids.has(id)) id = `${slug(a.name)}-${n++}`; ids.add(id); chosen.push({ attachment: a, id, role, pin: null }); };
+  for (const a of list.filter(a => !a.void && isResponse(a)).sort(newest).slice(0, 3)) add(a, 'applicant_response');
+  const drawings = list.filter(a => !a.void && !isResponse(a) && isDrawing(a)).sort(newest).slice(0, Math.max(0, max - chosen.length));
+  for (const a of drawings) add(a, 'drawing_current');
+  for (const d of drawings) { const token = sheetToken(d.name); if (!token) continue; const prior = list.filter(a => a.void && sheetToken(a.name) === token).sort(newest)[0]; if (prior) add(prior, 'drawing_superseded'); }
+  return chosen;
 }
 /** Deployments label the search dropdowns differently ("PERMIT NUMBER", "Permit No", "PERMIT_NO"). Picks the option to use or returns null. */
 export function pickOption(options: { label: string; value: string }[], kind: 'permitNumber' | 'equals') {
@@ -72,7 +90,7 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
     finaledDate: await label(page, 'lblPermitFinaledDate'), expirationDate: await label(page, 'lblPermitExpirationDate'),
   };
   if (!permit.status) throw new Error('Permit status label not found; portal layout may have changed');
-  if (permit.siteAddress && !collapse(permit.siteAddress).toUpperCase().includes(c.expectedSiteAddress.toUpperCase())) throw new Error('Permit site address does not match the qualified case');
+  if (c.expectedSiteAddress && permit.siteAddress && !collapse(permit.siteAddress).toUpperCase().includes(c.expectedSiteAddress.toUpperCase())) throw new Error('Permit site address does not match the qualified case');
   await page.screenshot({ path: join(out, 'portal-permit-info.png'), fullPage: true });
   await event('portal_permit_info_captured', { status: permit.status });
 
@@ -124,27 +142,40 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
   if (!reviews.length) throw new Error('No review rows found');
   await event('portal_reviews_captured', { count: reviews.length, withNotes: reviews.filter(r => r.notes).length });
 
-  // Download only the pinned documents, inside the browser session so the portal's own attachment handler serves them.
-  const files = new Map<string, Buffer>();
-  for (const pin of c.attachments) {
+  // Download the pinned documents, or an automatic bounded selection, inside the browser session so the portal's own attachment handler serves them.
+  const targets: AttachmentTarget[] = c.attachments.length ? c.attachments.map(pin => {
     const matches = attachments.filter(a => collapse(a.name).toUpperCase().includes(pin.match.toUpperCase()));
     if (matches.length !== 1) throw new Error(`Expected exactly one attachment matching ${pin.id}, found ${matches.length}`);
-    const target = matches[0]!;
-    const encoded = await page.evaluate(async (url: string) => {
-      const r = await fetch(url, { credentials: 'same-origin', redirect: 'error', signal: AbortSignal.timeout(60_000) });
-      if (!r.ok || !(r.headers.get('content-type') || '').toLowerCase().includes('pdf')) throw new Error('Attachment unavailable');
-      const reader = r.body!.getReader(); const chunks: Uint8Array[] = []; let size = 0;
-      while (true) { const { done, value } = await reader.read(); if (done) break; size += value.length; if (size > 15_000_000) { await reader.cancel(); throw new Error('Attachment too large'); } chunks.push(value); }
-      let binary = ''; for (const bytes of chunks) for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-      return btoa(binary);
-    }, target.url);
+    return { attachment: matches[0]!, id: pin.id, role: pin.role, pin };
+  }) : c.autoAttachments ? selectAttachments(attachments) : [];
+  await event('portal_attachments_selected', { count: targets.length, mode: c.attachments.length ? 'pinned' : c.autoAttachments ? 'auto' : 'none' });
+  const files = new Map<string, Buffer>();
+  let totalBytes = 0;
+  for (const target of targets) {
+    let encoded: string;
+    try {
+      encoded = await page.evaluate(async (url: string) => {
+        const r = await fetch(url, { credentials: 'same-origin', redirect: 'error', signal: AbortSignal.timeout(60_000) });
+        if (!r.ok || !(r.headers.get('content-type') || '').toLowerCase().includes('pdf')) throw new Error('Attachment unavailable');
+        const reader = r.body!.getReader(); const chunks: Uint8Array[] = []; let size = 0;
+        while (true) { const { done, value } = await reader.read(); if (done) break; size += value.length; if (size > 15_000_000) { await reader.cancel(); throw new Error('Attachment too large'); } chunks.push(value); }
+        let binary = ''; for (const bytes of chunks) for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+        return btoa(binary);
+      }, target.attachment.url);
+    } catch (error) {
+      if (target.pin) throw error;
+      await event('portal_attachment_skipped', { id: target.id, reason: error instanceof Error ? error.message.slice(0, 80) : 'unavailable' });
+      continue;
+    }
     const bytes = Buffer.from(encoded, 'base64');
-    if (!bytes.subarray(0, 5).equals(Buffer.from('%PDF-'))) throw new Error(`Attachment ${pin.id} is not a PDF`);
+    if (!bytes.subarray(0, 5).equals(Buffer.from('%PDF-'))) { if (target.pin) throw new Error(`Attachment ${target.id} is not a PDF`); await event('portal_attachment_skipped', { id: target.id, reason: 'not a PDF' }); continue; }
+    totalBytes += bytes.length;
+    if (totalBytes > 40_000_000) { if (target.pin) throw new Error('Attachment budget exceeded'); await event('portal_attachment_skipped', { id: target.id, reason: 'budget' }); continue; }
     const sha256 = digest(bytes);
-    target.downloaded = { id: pin.id, role: pin.role, sha256, bytes: bytes.length, matchesPinned: sha256 === pin.sha256 };
-    files.set(pin.id, bytes);
-    await writeFile(join(out, 'attachments', `${pin.id}.pdf`), bytes);
-    await event('portal_attachment_downloaded', { id: pin.id, bytes: bytes.length, matchesPinned: target.downloaded.matchesPinned, void: target.void });
+    target.attachment.downloaded = { id: target.id, role: target.role, sha256, bytes: bytes.length, matchesPinned: target.pin ? sha256 === target.pin.sha256 : null };
+    files.set(target.id, bytes);
+    await writeFile(join(out, 'attachments', `${target.id}.pdf`), bytes);
+    await event('portal_attachment_downloaded', { id: target.id, role: target.role, bytes: bytes.length, matchesPinned: target.attachment.downloaded.matchesPinned, void: target.attachment.void });
   }
   const snapshot = SnapshotSchema.parse({ version: 1, capturedAt: new Date().toISOString(), permitNumber: c.permitNumber, portalUrl: page.url(), sessionId, permit, reviews, attachments, replay: null });
   return { snapshot, files };

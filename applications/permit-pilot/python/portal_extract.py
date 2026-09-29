@@ -20,17 +20,19 @@ for item in manifest:
     if len(data) > 15_000_000:
         raise ValueError('Attachment exceeds size budget')
     pages = []
+    n_pages = 0
     with pdfium.PdfDocument(data) as pdf:
-        total += len(pdf)
-        if total > 40:
-            raise ValueError('Attachment set exceeds 40 pages')
-        for i in range(len(pdf)):
+        n_pages = len(pdf)
+        # Bounded: at most 12 pages per file and 40 in total; the rest are counted, not read.
+        allowed = max(0, min(len(pdf), 12, 40 - total))
+        total += allowed
+        for i in range(allowed):
             page = pdf[i]
             textpage = page.get_textpage()
             text = textpage.get_text_range()
             pages.append(dict(number=i + 1, text=text[:10000], textTruncated=len(text) > 10000))
             textpage.close()
             page.close()
-    result.append(dict(id=item['id'], url=item['url'], pages=pages))
+    result.append(dict(id=item['id'], url=item['url'], pages=pages, pagesTotal=n_pages, pagesTruncated=n_pages - allowed))
 (root / 'documents.json').write_text(json.dumps(result))
 print(json.dumps({'documents': len(result), 'pages': total}))

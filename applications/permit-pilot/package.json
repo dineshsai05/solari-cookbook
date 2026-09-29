@@ -13,7 +13,9 @@
     "fixtures": "node --import tsx scripts/make-fixtures.ts",
     "demo:farmdale": "node --import tsx src/case-cli.ts",
     "demo:pinecrest": "node --import tsx src/portal-cli.ts --case pinecrest",
-    "demo:atherton": "node --import tsx src/portal-cli.ts --case atherton"
+    "demo:atherton": "node --import tsx src/portal-cli.ts --case atherton",
+    "serve": "node --import tsx src/server.ts",
+    "host": "node --import tsx scripts/host-on-solari.ts"
   },
   "dependencies": {
     "@solarisdk/browser": "0.1.5",

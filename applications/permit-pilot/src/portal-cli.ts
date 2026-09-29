@@ -1,12 +1,13 @@
 import { readFile, writeFile, mkdir, appendFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { join, resolve } from 'node:path';
+import { join, resolve, dirname, basename } from 'node:path';
 import { parseArgs } from 'node:util';
 import { config } from 'dotenv';
 import { Solari } from '@solarisdk/browser';
 import { captureSnapshot, type PortalCase } from './portal-etrakit.js';
 import { trackerCsv, updateTrackerOnDesktop } from './desktop-tracker.js';
 import { latestRun } from './portal-runs.js';
+import { resolveCase } from './portal-cases.js';
 import { diffSnapshots, replaySnapshot, SnapshotSchema, type Snapshot, type SnapshotDiff } from './portal-snapshot.js';
 import { analyzePortal, attachmentDocId, reviewDocuments, type PortalAnalysisResult } from './portal-analysis.js';
 import { portalReport } from './portal-report.js';
@@ -15,9 +16,9 @@ import type { PassageDocument } from './passages.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 config({ path: join(root, '.env'), quiet: true });
-const { values } = parseArgs({ options: { case: { type: 'string', default: 'pinecrest' }, compare: { type: 'string' }, 'no-compare': { type: 'boolean', default: false }, replay: { type: 'string' }, 'no-model': { type: 'boolean', default: false }, desktop: { type: 'boolean', default: false }, help: { type: 'boolean' } }, strict: true });
+const { values } = parseArgs({ options: { case: { type: 'string' }, portal: { type: 'string' }, permit: { type: 'string' }, out: { type: 'string' }, compare: { type: 'string' }, 'no-compare': { type: 'boolean', default: false }, replay: { type: 'string' }, 'no-model': { type: 'boolean', default: false }, desktop: { type: 'boolean', default: false }, help: { type: 'boolean' } }, strict: true });
 if (values.help) {
-  console.log('npm run demo:pinecrest -- [--case pinecrest|atherton] [--compare artifacts/<previous> | --no-compare] [--replay YYYY-MM-DD] [--no-model] [--desktop]\nRead-only public portal capture. Compares against the latest earlier run of the same case unless told otherwise.\nRequires SOLARI_API_KEY; AIML_API_KEY and AIML_MODEL unless --no-model. --desktop opens the tracker on a Solari Desktop.');
+  console.log('npm run demo:pinecrest -- [--case pinecrest|atherton] [--portal <case|https://host> --permit <number>] [--out DIR] [--compare DIR | --no-compare] [--replay YYYY-MM-DD] [--no-model] [--desktop]\nRead-only public portal capture. Compares against the latest earlier run of the same case unless told otherwise.\nRequires SOLARI_API_KEY; AIML_API_KEY and AIML_MODEL unless --no-model. --desktop opens the tracker on a Solari Desktop.');
 } else {
   try { await main(); } catch (error) {
     let message = error instanceof Error ? error.message : 'Portal run failed';
@@ -29,19 +30,20 @@ if (values.help) {
 async function main() {
   const required = values['no-model'] ? ['SOLARI_API_KEY'] : ['SOLARI_API_KEY', 'AIML_API_KEY', 'AIML_MODEL'];
   for (const key of required) if (!process.env[key]?.trim()) throw new Error(`${key} is missing`);
-  if (!/^[a-z0-9-]+$/.test(values.case!)) throw new Error('Case names are lowercase file names under cases/');
-  const c: PortalCase = JSON.parse(await readFile(join(root, 'cases', `${values.case}.json`), 'utf8'));
+  const { c, slug } = await resolveCase(join(root, 'cases'), values.portal ?? values.case ?? 'pinecrest', values.permit);
+  const artifacts = values.out ? dirname(resolve(values.out)) : join(root, 'artifacts');
   let previous: Snapshot | undefined; let previousDir: string | null = null;
   if (values.compare) previousDir = resolve(values.compare);
-  else if (!values['no-compare']) previousDir = await latestRun(join(root, 'artifacts'), values.case!);
+  else if (!values['no-compare']) previousDir = await latestRun(artifacts, slug);
   if (previousDir) {
     previous = SnapshotSchema.parse(JSON.parse(await readFile(join(previousDir, 'snapshot.json'), 'utf8')));
     if (previous.permitNumber !== c.permitNumber) throw new Error('Previous snapshot is for a different permit');
   }
-  const out = join(root, 'artifacts', `${Date.now()}-${values.case}-live`);
+  const out = values.out ? resolve(values.out) : join(artifacts, `${Date.now()}-${slug}-live`);
+  if (values.out && !basename(out).endsWith(`-${slug}-live`)) throw new Error(`--out must end with -${slug}-live so later runs can find it`);
   await mkdir(join(out, 'attachments'), { recursive: true });
   const event = async (name: string, detail: unknown = {}) => { console.log(name); await appendFile(join(out, 'events.jsonl'), JSON.stringify({ at: new Date().toISOString(), name, detail }) + '\n'); };
-  const manifest = { mode: 'live-public-portal', status: 'running', case: c.name, permitNumber: c.permitNumber, startedAt: new Date().toISOString(), provider: values['no-model'] ? null : 'aiml', model: values['no-model'] ? null : process.env.AIML_MODEL, comparedWith: previousDir, replayAsOf: values.replay ?? null, browserSessionId: null as string | null, desktop: values.desktop, replaySaved: false };
+  const manifest = { mode: 'live-public-portal', status: 'running', case: c.name, slug, portal: c.origin, permitNumber: c.permitNumber, startedAt: new Date().toISOString(), provider: values['no-model'] ? null : 'aiml', model: values['no-model'] ? null : process.env.AIML_MODEL, comparedWith: previousDir, replayAsOf: values.replay ?? null, browserSessionId: null as string | null, desktop: values.desktop, replaySaved: false };
   const save = () => writeFile(join(out, 'manifest.json'), JSON.stringify(manifest, null, 2));
   await save();
   try {
