@@ -1,0 +1,202 @@
+{
+  "analysis": {
+    "items": [
+      {
+        "reviewRecordId": "ECON:241217070022867",
+        "commentSummary": "1. Clarify if the main pool 12\" floor has one or two layers of reinforcing and update graphics or schedule accordingly.\n2. Correctly identify the sections on Sheet S-01 to coordinate with the floor plan.\n3. Identify the height of the walls for the front ponds; section shows water depth as 18\" but wall heights are missing.\n4. Indicate size of foundation for chain link fence and gate posts.\n5. Address non-compliance of the rolling gate at the N.E. corner with pool barrier requirements.\n6. Provide details for aluminum picket fence/gate.",
+        "responseStatus": "applicant_asserted",
+        "responseSummary": "Applicant clarified the main pool 12\" floor reinforcing, updating graphics on Sheet S-01 Rev 2; no responses found for other comments.",
+        "drawingReference": "S-01 Rev 2",
+        "evidence": [
+          {
+            "documentId": "review:ECON:241217070022867",
+            "page": 1,
+            "quote": "BUILDING review by ARDESHIR MAHTABFAR; status DENIED; submitted 12/17/2024; completed 1/8/2025.\n1/8/2025 11:41:08 AM\n1. MAIN POOL 12\" FLOOR WITH REINFORCING 1; NEEDS CLARIFICATION IF TWO LAYER OF REINFORCING UPDATE THE GRAPHICS IN SECTION OR CORRECT SCHEDULE.\n2. SHEET S-01; COORDINATION; NEED TO IDENTIFY SECTIONS CORRECTLY TO COORDINATE WITH FLOOR PLAN.\n3. FRONT PONDS; IDENTIFY HEIGHT OF WALLS. SECTION INDICATES WATER DEPTH AS 18\", BUT MISSING HEIGHT OF WALLS."
+          },
+          {
+            "documentId": "review:ECON:241217070022867",
+            "page": 1,
+            "quote": "4. INDICATE SIZE OF FOUNDATION FOR CHAIN LINK FENCE & GATE POSTS.\n5. ROLLING GATE AT N.E. CORNER DOES NOT COMPLY WITH POOL BARRIER REQUIREMENTS.\n6. PROVIDE DETAILS FOR ALUMINUM PICKET FENCE/GATE."
+          },
+          {
+            "documentId": "attachment:applicant-response-rev2",
+            "page": 1,
+            "quote": "ANSWER SHEET: E_SWIMMING POOL – POOL+WATER FEATURE \nBL2024-1706\n6290 CHAPMAN FIELD DR, MIAMI, FL 33156\nType: BUILDING\nReviewer: ARDEMIR\nNotes: 03/25/2025\nMAIN POOL 12 INCH FLOOR WITH REINFORCING 1 NEEDS CLARIFICATION, \nIF TWO LAYER OF REINFORCING UPDATE THE GRAPHICS IN SECTION OR\nCORRECT SCHEDULE. PLEASE SEE S-01 (Rev 2)\nType: ZONING\nReviewer: PAT\nNotes: 03/19/2025\nPlease provide a dimension of the ponds to indicate the overall height of the pond and "
+          },
+          {
+            "documentId": "attachment:structural-S01-rev2",
+            "page": 1,
+            "quote": "VIRGINIA GRAEME BAKER (VGB) POOL & SPA SAFETY ACT APPROVED POOL DRAIN COVERS\nX X X X X X X X\nX DRAW BY 305.741.3442\nNEW SWIMMING POOL-SPA, SPA & POND FOR :\nFKAC 1 LLC\n6290 CHAPMAN FIELD DR, PINECREST, FL 33156\nJORGE CRESPO, P.E\nLICENSE# 60753\n10441 SW 46TH ST\nMIAMI, FL 33165\n786-325-3996 REVISIONS NO. DATE SHEET: S-01\n1 2/28/2025\n2\n2\n2\n2\n2 4/7/2025\n2\n2\n2\n2\n2\n2\n2"
+          }
+        ]
+      },
+      {
+        "reviewRecordId": "ECON:241217070022871",
+        "commentSummary": "Blower motor requires GFCI protection per 2020 NEC 210.8(F).",
+        "responseStatus": "no_response_in_packet",
+        "responseSummary": "No applicant response addressing GFCI protection for blower motor found.",
+        "drawingReference": null,
+        "evidence": [
+          {
+            "documentId": "review:ECON:241217070022871",
+            "page": 1,
+            "quote": "ELECTRICAL review by TOM FLINGOS; status DENIED; submitted 12/17/2024; completed 12/19/2024.\n12/19/2024 4:04:19 AM\nBLOWER MOTOR REQUIRES GFCI PROTECTION. 2020 NEC 210.8(F)"
+          }
+        ]
+      },
+      {
+        "reviewRecordId": "ECON:241217070024875",
+        "commentSummary": "Pool and deck impervious areas included in approved plan. Condition: upon construction completion but prior to final approval, request a final stormwater inspection from the Village.",
+        "responseStatus": "not_applicable",
+        "responseSummary": "Condition requires final stormwater inspection request before project final approval.",
+        "drawingReference": null,
+        "evidence": [
+          {
+            "documentId": "review:ECON:241217070024875",
+            "page": 1,
+            "quote": "STORM DRAINAGE review by REINALDO RIVERA; status APPROVED W/COND; submitted 12/17/2024; completed 12/18/2024.\n12/18/2024 10:26:58 AM\nThe Pool and Deck impervious areas were included in the approved Paving, Grading and Drainage Plan prepared by EGSC Engineering Consultants.\nCONDITION OF PERMIT:\nUpon construction completion but prior to final approval for the project, the applicant shall request the Village for:\n(1)\tA FINAL STORMWATER Inspection."
+          }
+        ]
+      },
+      {
+        "reviewRecordId": "ECON:241217070025877",
+        "commentSummary": "1. Provide details and full elevations of aluminum picket fence/gates.\n2. Show details and full elevation of fence along SW63rd Avenue.\n3. Explain what a \"rolling pool gate\" is.\n4. Show details of pool deck.\n5. Provide Residential Pool Owner's Certification.\n6. Provide dimension of ponds indicating overall height, not just water level.",
+        "responseStatus": "applicant_asserted",
+        "responseSummary": "Applicant provided pond dimensions indicating overall height, referencing S-01 Rev 2; no response for other items found.",
+        "drawingReference": "S-01 Rev 2",
+        "evidence": [
+          {
+            "documentId": "review:ECON:241217070025877",
+            "page": 1,
+            "quote": "ZONING review by SUBRATA BASU; status DENIED; submitted 12/17/2024; completed 12/27/2024.\n12/27/2024 12:27:43 PM\n1. Please provide details and full elevations of the aluminum picket fence/gates. \n2. Please show the details and full elevation of the fence along SW63rd Avenue\n3. What is a \"rolling pool gate\"??? \n4. Please show details of pool deck\n5. Please provide a Residential Pool Owner's Certification"
+          },
+          {
+            "documentId": "review:ECON:241217070025877",
+            "page": 1,
+            "quote": "6. Please provide a dimension of the ponds to indicate the overall height of the pond and not just to the water level"
+          },
+          {
+            "documentId": "attachment:applicant-response-rev2",
+            "page": 1,
+            "quote": "ANSWER SHEET: E_SWIMMING POOL – POOL+WATER FEATURE \nBL2024-1706\n6290 CHAPMAN FIELD DR, MIAMI, FL 33156\nType: BUILDING\nReviewer: ARDEMIR\nNotes: 03/25/2025\nMAIN POOL 12 INCH FLOOR WITH REINFORCING 1 NEEDS CLARIFICATION, \nIF TWO LAYER OF REINFORCING UPDATE THE GRAPHICS IN SECTION OR\nCORRECT SCHEDULE. PLEASE SEE S-01 (Rev 2)\nType: ZONING\nReviewer: PAT\nNotes: 03/19/2025\nPlease provide a dimension of the ponds to indicate the overall height of the pond and "
+          },
+          {
+            "documentId": "attachment:applicant-response-rev2",
+            "page": 1,
+            "quote": "not just to the water level. DIMENSIONS UPDATED. SEE S-01 (Rev 2 bubble)."
+          }
+        ]
+      },
+      {
+        "reviewRecordId": "EM:2503180302101448",
+        "commentSummary": "Clarify if main pool 12\" floor has one or two layers of reinforcing and update graphics or schedule accordingly.",
+        "responseStatus": "applicant_asserted",
+        "responseSummary": "Applicant clarified reinforcing and updated graphics on Sheet S-01 Rev 2.",
+        "drawingReference": "S-01 Rev 2",
+        "evidence": [
+          {
+            "documentId": "review:EM:2503180302101448",
+            "page": 1,
+            "quote": "BUILDING EXPEDITE review by ARDESHIR MAHTABFAR; status INCOMPLETE; submitted 3/18/2025; completed 3/25/2025.\n3/25/2025 11:53:01 AM\n1. MAIN POOL 12 INCH FLOOR WITH REINFORCING 1  NEEDS CLARIFICATION, IF TWO LAYER OF REINFORCING UPDATE THE GRAPHICS IN SECTION OR CORRECT SCHEDULE."
+          },
+          {
+            "documentId": "attachment:applicant-response-rev2",
+            "page": 1,
+            "quote": "ANSWER SHEET: E_SWIMMING POOL – POOL+WATER FEATURE \nBL2024-1706\n6290 CHAPMAN FIELD DR, MIAMI, FL 33156\nType: BUILDING\nReviewer: ARDEMIR\nNotes: 03/25/2025\nMAIN POOL 12 INCH FLOOR WITH REINFORCING 1 NEEDS CLARIFICATION, \nIF TWO LAYER OF REINFORCING UPDATE THE GRAPHICS IN SECTION OR\nCORRECT SCHEDULE. PLEASE SEE S-01 (Rev 2)\nType: ZONING\nReviewer: PAT\nNotes: 03/19/2025\nPlease provide a dimension of the ponds to indicate the overall height of the pond and "
+          },
+          {
+            "documentId": "attachment:structural-S01-rev2",
+            "page": 1,
+            "quote": "VIRGINIA GRAEME BAKER (VGB) POOL & SPA SAFETY ACT APPROVED POOL DRAIN COVERS\nX X X X X X X X\nX DRAW BY 305.741.3442\nNEW SWIMMING POOL-SPA, SPA & POND FOR :\nFKAC 1 LLC\n6290 CHAPMAN FIELD DR, PINECREST, FL 33156\nJORGE CRESPO, P.E\nLICENSE# 60753\n10441 SW 46TH ST\nMIAMI, FL 33165\n786-325-3996 REVISIONS NO. DATE SHEET: S-01\n1 2/28/2025\n2\n2\n2\n2\n2 4/7/2025\n2\n2\n2\n2\n2\n2\n2"
+          }
+        ]
+      },
+      {
+        "reviewRecordId": "EM:2503180302111451",
+        "commentSummary": "Provide dimension of ponds showing overall height, not just water level, remaining comment from previous review.",
+        "responseStatus": "applicant_asserted",
+        "responseSummary": "Applicant updated pond dimensions to show overall height per S-01 Rev 2.",
+        "drawingReference": "S-01 Rev 2",
+        "evidence": [
+          {
+            "documentId": "review:EM:2503180302111451",
+            "page": 1,
+            "quote": "ZONING review by PAT JANISSE; status DENIED; submitted 3/18/2025; completed 3/19/2025.\n3/19/2025 2:02:26 PM\nRemaining comment from previous review \n6. Please provide a dimension of the ponds to indicate the overall height of the pond and not just to the water level"
+          },
+          {
+            "documentId": "attachment:applicant-response-rev2",
+            "page": 1,
+            "quote": "ANSWER SHEET: E_SWIMMING POOL – POOL+WATER FEATURE \nBL2024-1706\n6290 CHAPMAN FIELD DR, MIAMI, FL 33156\nType: BUILDING\nReviewer: ARDEMIR\nNotes: 03/25/2025\nMAIN POOL 12 INCH FLOOR WITH REINFORCING 1 NEEDS CLARIFICATION, \nIF TWO LAYER OF REINFORCING UPDATE THE GRAPHICS IN SECTION OR\nCORRECT SCHEDULE. PLEASE SEE S-01 (Rev 2)\nType: ZONING\nReviewer: PAT\nNotes: 03/19/2025\nPlease provide a dimension of the ponds to indicate the overall height of the pond and "
+          },
+          {
+            "documentId": "attachment:applicant-response-rev2",
+            "page": 1,
+            "quote": "not just to the water level. DIMENSIONS UPDATED. SEE S-01 (Rev 2 bubble)."
+          }
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "title": "No applicant response found for several BUILDING review comments",
+        "detail": "The BUILDING review by ARDESHIR MAHTABFAR requests clarifications and details on the fence foundation, rolling gate compliance, and aluminum picket fence/gate details among others, but applicant responses only address reinforcing clarification. Are there any further applicant responses addressing these comments?",
+        "evidence": [
+          {
+            "documentId": "review:ECON:241217070022867",
+            "page": 1,
+            "quote": "4. INDICATE SIZE OF FOUNDATION FOR CHAIN LINK FENCE & GATE POSTS.\n5. ROLLING GATE AT N.E. CORNER DOES NOT COMPLY WITH POOL BARRIER REQUIREMENTS.\n6. PROVIDE DETAILS FOR ALUMINUM PICKET FENCE/GATE."
+          },
+          {
+            "documentId": "attachment:applicant-response-rev2",
+            "page": 1,
+            "quote": "ANSWER SHEET: E_SWIMMING POOL – POOL+WATER FEATURE \nBL2024-1706\n6290 CHAPMAN FIELD DR, MIAMI, FL 33156\nType: BUILDING\nReviewer: ARDEMIR\nNotes: 03/25/2025\nMAIN POOL 12 INCH FLOOR WITH REINFORCING 1 NEEDS CLARIFICATION, \nIF TWO LAYER OF REINFORCING UPDATE THE GRAPHICS IN SECTION OR\nCORRECT SCHEDULE. PLEASE SEE S-01 (Rev 2)\nType: ZONING\nReviewer: PAT\nNotes: 03/19/2025\nPlease provide a dimension of the ponds to indicate the overall height of the pond and "
+          }
+        ]
+      },
+      {
+        "title": "No applicant response found for ELECTRICAL comment on blower motor GFCI protection",
+        "detail": "The ELECTRICAL review by TOM FLINGOS requires GFCI protection for the blower motor per 2020 NEC 210.8(F), but no applicant response addressing this is found. Has the applicant responded elsewhere to this comment?",
+        "evidence": [
+          {
+            "documentId": "review:ECON:241217070022871",
+            "page": 1,
+            "quote": "ELECTRICAL review by TOM FLINGOS; status DENIED; submitted 12/17/2024; completed 12/19/2024.\n12/19/2024 4:04:19 AM\nBLOWER MOTOR REQUIRES GFCI PROTECTION. 2020 NEC 210.8(F)"
+          }
+        ]
+      },
+      {
+        "title": "Partial applicant response on ZONING comments, missing many details",
+        "detail": "The ZONING review by SUBRATA BASU asks for full elevations and details of fences and pool deck, explanation of rolling pool gate, and a residential pool owner's certification. Applicant only provides pond dimensions regarding height. Are there any other responses for the unspecified ZONING comments?",
+        "evidence": [
+          {
+            "documentId": "review:ECON:241217070025877",
+            "page": 1,
+            "quote": "ZONING review by SUBRATA BASU; status DENIED; submitted 12/17/2024; completed 12/27/2024.\n12/27/2024 12:27:43 PM\n1. Please provide details and full elevations of the aluminum picket fence/gates. \n2. Please show the details and full elevation of the fence along SW63rd Avenue\n3. What is a \"rolling pool gate\"??? \n4. Please show details of pool deck\n5. Please provide a Residential Pool Owner's Certification"
+          },
+          {
+            "documentId": "attachment:applicant-response-rev2",
+            "page": 1,
+            "quote": "ANSWER SHEET: E_SWIMMING POOL – POOL+WATER FEATURE \nBL2024-1706\n6290 CHAPMAN FIELD DR, MIAMI, FL 33156\nType: BUILDING\nReviewer: ARDEMIR\nNotes: 03/25/2025\nMAIN POOL 12 INCH FLOOR WITH REINFORCING 1 NEEDS CLARIFICATION, \nIF TWO LAYER OF REINFORCING UPDATE THE GRAPHICS IN SECTION OR\nCORRECT SCHEDULE. PLEASE SEE S-01 (Rev 2)\nType: ZONING\nReviewer: PAT\nNotes: 03/19/2025\nPlease provide a dimension of the ponds to indicate the overall height of the pond and "
+          }
+        ]
+      }
+    ]
+  },
+  "model": "gpt-4.1-mini-2025-04-14",
+  "usage": {
+    "prompt_tokens": 3345,
+    "completion_tokens": 1276,
+    "total_tokens": 4621,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "responseId": "chatcmpl-ETKr9dCfjBJukldmu7J4p0AOnTboc"
+}
