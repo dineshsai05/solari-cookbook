@@ -40,3 +40,4 @@ variable it reads and nothing else.
 | Application | Language | What it does |
 | --- | --- | --- |
 | [worldline](worldline) | Python | Snapshot-branch competing plans, verify their artifacts, and replay only the winner |
+| [permit-pilot](permit-pilot) | TypeScript + Python | Watch a real building permit through a government portal: search it, read every reviewer comment, download revisions, diff snapshots, replay a checkpoint, and link comments to responses with checked evidence |

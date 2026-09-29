@@ -1,0 +1,721 @@
+[
+  {
+    "field_id": "New construction",
+    "type": "checkbox",
+    "checked_value": "/New constructio",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      31.2342,
+      696.565,
+      40.6398,
+      705.971
+    ]
+  },
+  {
+    "field_id": "Addition",
+    "type": "checkbox",
+    "checked_value": "/Yes",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      160.272,
+      696.565,
+      169.677,
+      705.971
+    ]
+  },
+  {
+    "field_id": "Alteration",
+    "type": "checkbox",
+    "checked_value": "/Alteratio",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      273.026,
+      696.565,
+      282.431,
+      705.971
+    ]
+  },
+  {
+    "field_id": "Demolition",
+    "type": "checkbox",
+    "checked_value": "/Demolition",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      31.2342,
+      685.198,
+      40.6398,
+      694.603
+    ]
+  },
+  {
+    "field_id": "Other:",
+    "type": "checkbox",
+    "checked_value": "/Yes",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      160.272,
+      685.198,
+      169.677,
+      694.603
+    ]
+  },
+  {
+    "field_id": "Other - Describe",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      195.109,
+      684.327,
+      375.545,
+      695.698
+    ]
+  },
+  {
+    "field_id": "Residential: 1 and 2 Family Dwellings",
+    "type": "checkbox",
+    "checked_value": "/Residential: 1 & 2 Family Dwellin",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      31.0304,
+      659.256,
+      40.5744,
+      668.8
+    ]
+  },
+  {
+    "field_id": "Commercial: Apartments/Condos",
+    "type": "checkbox",
+    "checked_value": "/Commercial: Apartments/Condo",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      173.893,
+      659.256,
+      183.437,
+      668.8
+    ]
+  },
+  {
+    "field_id": "Commercial: Other",
+    "type": "checkbox",
+    "checked_value": "/Commercia",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      309.076,
+      659.256,
+      318.62,
+      668.8
+    ]
+  },
+  {
+    "field_id": "Residential: Other",
+    "type": "checkbox",
+    "checked_value": "/Residential: Oth",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      31.0304,
+      647.274,
+      40.5744,
+      656.818
+    ]
+  },
+  {
+    "field_id": "Commercial: Business/Industrial",
+    "type": "checkbox",
+    "checked_value": "/Commercial: Business/Industri",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      173.893,
+      647.274,
+      183.437,
+      656.818
+    ]
+  },
+  {
+    "field_id": "Office Use Only",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      380.607,
+      640.6689,
+      583.375,
+      708.24
+    ]
+  },
+  {
+    "field_id": "Job Address",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      77.317,
+      614.821,
+      377.051,
+      631.921
+    ]
+  },
+  {
+    "field_id": "Job City/State/ZIP",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      82.2041,
+      597.905,
+      377.051,
+      615.004
+    ]
+  },
+  {
+    "field_id": "Job Suite/Building/Apt",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      97.8545,
+      581.564,
+      144,
+      596.618
+    ]
+  },
+  {
+    "field_id": "Project Name",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      195.054,
+      581.564,
+      375.709,
+      596.946
+    ]
+  },
+  {
+    "field_id": "Residential Valuation",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.96,
+      573.107,
+      582.6,
+      586.547
+    ]
+  },
+  {
+    "field_id": "Tax Map/Parcel Number",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      111.933,
+      564.455,
+      375.709,
+      580.819
+    ]
+  },
+  {
+    "field_id": "Number of bedrooms",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.96,
+      558.36,
+      582.6,
+      571.8
+    ]
+  },
+  {
+    "field_id": "Number of bathrooms",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.96,
+      543.96,
+      582.6,
+      557.4
+    ]
+  },
+  {
+    "field_id": "Land Use or associated Permit Number",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      29.5641,
+      529.9821,
+      375.709,
+      546.3459
+    ]
+  },
+  {
+    "field_id": "Total number of floors",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.96,
+      529.56,
+      582.6,
+      543
+    ]
+  },
+  {
+    "field_id": "New Dwelling Area",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.982,
+      515.738,
+      547.527,
+      528.502
+    ]
+  },
+  {
+    "field_id": "Garage/Carport Area",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.982,
+      501.338,
+      547.637,
+      513.9921
+    ]
+  },
+  {
+    "field_id": "Covered Porch Area",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.982,
+      486.938,
+      547.637,
+      499.592
+    ]
+  },
+  {
+    "field_id": "Deck Area",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.982,
+      472.102,
+      547.637,
+      484.975
+    ]
+  },
+  {
+    "field_id": "Description of work",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      29.1871,
+      466.455,
+      376.123,
+      517.334
+    ]
+  },
+  {
+    "field_id": "Other Structure Area",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.982,
+      457.702,
+      547.419,
+      471.011
+    ]
+  },
+  {
+    "field_id": "Property Owner",
+    "type": "checkbox",
+    "checked_value": "/Property owner  or",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      30.1087,
+      450.665,
+      43.0125,
+      463.569
+    ]
+  },
+  {
+    "field_id": "Tenant",
+    "type": "checkbox",
+    "checked_value": "/Tenant (REQUIRED)",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      132.11,
+      450.665,
+      145.014,
+      463.569
+    ]
+  },
+  {
+    "field_id": "Name of property owner or tenant",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      54.6873,
+      432.352,
+      251.079,
+      448.822
+    ]
+  },
+  {
+    "field_id": "Phone of property owner or tenant",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      278.967,
+      432.352,
+      375.816,
+      448.822
+    ]
+  },
+  {
+    "field_id": "Address of property owner or tenant",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      61.1391,
+      415.147,
+      376.123,
+      431.617
+    ]
+  },
+  {
+    "field_id": "City/State/ZIP of property owner or tenant",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      80.1875,
+      398.556,
+      376.123,
+      415.026
+    ]
+  },
+  {
+    "field_id": "Commercial Valuation",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.96,
+      393.069,
+      582.6,
+      406.509
+    ]
+  },
+  {
+    "field_id": "Email of property owner or tenant",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      53.4583,
+      381.351,
+      376.123,
+      397.821
+    ]
+  },
+  {
+    "field_id": "Existing Building Area",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.982,
+      379.679,
+      548.2921,
+      392.115
+    ]
+  },
+  {
+    "field_id": "New Building Area",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.982,
+      365.061,
+      548.073,
+      377.934
+    ]
+  },
+  {
+    "field_id": "Number of stories",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.96,
+      350.203,
+      582.6,
+      363.643
+    ]
+  },
+  {
+    "field_id": "Owner signature",
+    "type": "unknown (/Sig)",
+    "page": 1,
+    "rect": [
+      88.7901,
+      347.694,
+      306.996,
+      368.634
+    ]
+  },
+  {
+    "field_id": "Date",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      327.6,
+      347.564,
+      375.382,
+      365.237
+    ]
+  },
+  {
+    "field_id": "Type of construction",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.96,
+      335.803,
+      582.6,
+      349.243
+    ]
+  },
+  {
+    "field_id": "Contractor",
+    "type": "checkbox",
+    "checked_value": "/Contractor",
+    "unchecked_value": "/Off",
+    "page": 1,
+    "rect": [
+      31.1931,
+      335.175,
+      41.9298,
+      345.584
+    ]
+  },
+  {
+    "field_id": "Name of Business",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      87.2539,
+      317.14,
+      251.079,
+      333.609
+    ]
+  },
+  {
+    "field_id": "Phone of Business",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      279.274,
+      317.14,
+      375.816,
+      333.609
+    ]
+  },
+  {
+    "field_id": "Existing",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.96,
+      310.483,
+      582.6,
+      323.923
+    ]
+  },
+  {
+    "field_id": "Address of Contractor",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      61.1391,
+      299.935,
+      376.123,
+      316.405
+    ]
+  },
+  {
+    "field_id": "New",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      450.982,
+      296.333,
+      582.546,
+      309.643
+    ]
+  },
+  {
+    "field_id": "City/State/ZIP of Contractor",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      80.1875,
+      282.73,
+      376.123,
+      299.199
+    ]
+  },
+  {
+    "field_id": "Email of Contractor",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      53.4583,
+      265.832,
+      376.123,
+      282.302
+    ]
+  },
+  {
+    "field_id": "CCB lic. no",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      71.2778,
+      250.777,
+      376.123,
+      265.097
+    ]
+  },
+  {
+    "field_id": "Contractor Authorized Signature",
+    "type": "unknown (/Sig)",
+    "page": 1,
+    "rect": [
+      102.001,
+      231.561,
+      374.279,
+      249.735
+    ]
+  },
+  {
+    "field_id": "Contractor Print Name",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      71.3454,
+      214.364,
+      255.273,
+      230.728
+    ]
+  },
+  {
+    "field_id": "Contractor Date",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      275.891,
+      214.364,
+      375.445,
+      230.728
+    ]
+  },
+  {
+    "field_id": "Name of Contact Business",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      87.2539,
+      183.801,
+      376.123,
+      200.271
+    ]
+  },
+  {
+    "field_id": "Contact name",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      81.7237,
+      166.596,
+      376.123,
+      183.066
+    ]
+  },
+  {
+    "field_id": "Contact Address",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      60.8319,
+      150.005,
+      376.123,
+      166.475
+    ]
+  },
+  {
+    "field_id": "Contact City/State/ZIP",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      80.1876,
+      132.493,
+      376.123,
+      148.963
+    ]
+  },
+  {
+    "field_id": "Contact Phone",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      56.8379,
+      115.288,
+      376.123,
+      131.758
+    ]
+  },
+  {
+    "field_id": "Contact Email",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      54.9945,
+      98.6977,
+      376.123,
+      115.168
+    ]
+  },
+  {
+    "field_id": "Contact Signature",
+    "type": "unknown (/Sig)",
+    "page": 1,
+    "rect": [
+      102.616,
+      78.8663,
+      376.123,
+      98.2697
+    ]
+  },
+  {
+    "field_id": "Contact Print Name",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      71.3454,
+      62.5913,
+      255.273,
+      78.9553
+    ]
+  },
+  {
+    "field_id": "Contact Date",
+    "type": "text",
+    "page": 1,
+    "rect": [
+      275.891,
+      62.5913,
+      375.445,
+      78.9553
+    ]
+  }
+]

@@ -1,0 +1,59 @@
+{
+  "retrievedAt": "2026-09-29T04:38:59.223031+00:00",
+  "projectPage": "https://www.woodburn-or.gov/778/Design-Review-DR-25-02---Marion-County-H",
+  "files": [
+    {
+      "file": "originals/site-plans-2025-05-27.pdf",
+      "url": "https://www.woodburn-or.gov/DocumentCenter/View/2077/Site-Plans-revised-May-27-2025",
+      "pages": 31,
+      "bytes": 18739449,
+      "sha256": "80424a0fdc780f61c37b1cac92fbaa9862e71819d9c7543c1d7c9a3f4b86db32",
+      "id": "site-plans-2025-05-27",
+      "analyze": false
+    },
+    {
+      "file": "originals/revised-designs.pdf",
+      "url": "https://www.woodburn-or.gov/DocumentCenter/View/2078/MOC-25-02-Revised-Designs",
+      "pages": 11,
+      "bytes": 67786227,
+      "sha256": "ef7a96aaa7f093412fb908e3481083c1a0add1e76117829012d928c5cc3cc583",
+      "id": "revised-designs",
+      "analyze": false
+    },
+    {
+      "file": "originals/staff-report-2025-12-04.pdf",
+      "url": "https://www.woodburn-or.gov/DocumentCenter/View/2079/MOC-25-02-Staff-Report-with-attachments",
+      "pages": 33,
+      "bytes": 8894662,
+      "sha256": "8f782f9eeb1e35358d1dfcfe57c43225d856c8a4c4edc52a3d0707125ff8d3e8",
+      "id": "staff-report-2025-12-04",
+      "analyze": true
+    },
+    {
+      "file": "originals/modification-final-decision.pdf",
+      "url": "https://www.woodburn-or.gov/DocumentCenter/View/2082/MOC-25-02-PC-Final-Decision",
+      "pages": 5,
+      "bytes": 1957608,
+      "sha256": "bbe71a1170757d5fcee109e57a153446dbede182974da9fb79883a70af4606b4",
+      "id": "modification-final-decision",
+      "analyze": true
+    },
+    {
+      "file": "originals/completeness-letter-2025-10-29.pdf",
+      "url": "https://www.woodburn-or.gov/DocumentCenter/View/2081/MOC-25-02---Letter-of-Completeness-for-Modification-of-Conditions-application",
+      "pages": 5,
+      "bytes": 1003626,
+      "sha256": "480470c53ab5e7ee94db49b72d4d7b2f36f721c2c16009bd30143518eb145287",
+      "id": "completeness-letter-2025-10-29",
+      "analyze": true
+    }
+  ],
+  "name": "Farmdale Apartments",
+  "location": "1219 & 1233 W Lincoln Street, Woodburn, Oregon",
+  "caseIds": [
+    "DR 25-02",
+    "PAR 24-03",
+    "VAR 25-03",
+    "MOC 25-02"
+  ]
+}

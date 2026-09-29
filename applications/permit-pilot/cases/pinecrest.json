@@ -1,0 +1,14 @@
+{
+  "name": "Pinecrest permit BL2024-1706",
+  "authority": "Village of Pinecrest, Florida (eTRAKiT public portal)",
+  "origin": "https://pine-trk.aspgov.com",
+  "searchPath": "/eTRAKiT/Search/permit.aspx",
+  "permitNumber": "BL2024-1706",
+  "expectedSiteAddress": "6290 CHAPMAN FIELD DR",
+  "qualifiedAt": "2026-09-29",
+  "attachments": [
+    { "id": "applicant-response-rev2", "match": "ANSWER SHEET", "role": "applicant_response", "sha256": "18a4d1cd17577fa4ebfaa8655cfc5119b9dad276cece34afc906b1eacfc9eca3", "pages": 1 },
+    { "id": "structural-S01-rev2", "match": "7. S-01 Rev2.pdf", "role": "drawing_current", "sha256": "13d4abf0fba11f8bd5b1545729300aeddf7feb700932371d7b77c9a73fbbc13a", "pages": 1 },
+    { "id": "structural-S01-rev1-void", "match": "7. S-01 Rev1.pdf", "role": "drawing_superseded", "sha256": "8d74924f2ebe30ddc26f8a6b2a200cbcf2ffa895dfbcaf1de7ef447abed2394c", "pages": 1 }
+  ]
+}

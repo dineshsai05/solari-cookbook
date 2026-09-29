@@ -1,0 +1,30 @@
+{
+  "name": "permit-pilot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.8"
+  },
+  "scripts": {
+    "start": "node --import tsx src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test --test-isolation=none tests/*.test.ts",
+    "fixtures": "node --import tsx scripts/make-fixtures.ts",
+    "demo:farmdale": "node --import tsx src/case-cli.ts",
+    "demo:pinecrest": "node --import tsx src/portal-cli.ts"
+  },
+  "dependencies": {
+    "@solarisdk/browser": "0.1.5",
+    "@solarisdk/sandbox": "0.1.4",
+    "dotenv": "18.0.4",
+    "openai": "7.23.0",
+    "pdf-lib": "1.17.1",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.3",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}
