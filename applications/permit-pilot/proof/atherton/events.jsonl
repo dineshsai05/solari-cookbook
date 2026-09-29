@@ -1,0 +1,12 @@
+{"at":"2026-09-29T06:16:53.416Z","name":"browser_created","detail":{"id":"[redacted session id]"}}
+{"at":"2026-09-29T06:17:02.222Z","name":"portal_permit_opened","detail":{"url":"https://athr-trk.aspgov.com/eTRAKiT/Search/permit.aspx"}}
+{"at":"2026-09-29T06:17:08.912Z","name":"portal_permit_info_captured","detail":{"status":"UNDER REVIEW"}}
+{"at":"2026-09-29T06:17:09.246Z","name":"portal_attachments_listed","detail":{"count":0,"void":0}}
+{"at":"2026-09-29T06:17:22.870Z","name":"portal_reviews_captured","detail":{"count":11,"withNotes":0}}
+{"at":"2026-09-29T06:17:56.766Z","name":"replay_unavailable","detail":{"errorType":"SolariError"}}
+{"at":"2026-09-29T06:17:56.769Z","name":"snapshot_saved","detail":{"reviews":11,"attachments":0}}
+{"at":"2026-09-29T06:17:56.770Z","name":"sandbox_skipped","detail":{"reason":"no attachments to extract"}}
+{"at":"2026-09-29T06:17:56.772Z","name":"attachments_extracted","detail":{"documents":0,"pages":0}}
+{"at":"2026-09-29T06:17:56.775Z","name":"snapshot_compared","detail":{"with":"1790662535040-atherton-live","changed":false}}
+{"at":"2026-09-29T06:17:56.775Z","name":"checklist_skipped","detail":{"reason":"This portal publishes no reviewer notes or attachments for this permit, so there is nothing for the checklist to link."}}
+{"at":"2026-09-29T06:17:56.782Z","name":"portal_report_generated","detail":{}}

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "capturedAt": "2026-09-29T05:39:43.918Z",
+  "capturedAt": "2026-09-29T06:24:33.282Z",
   "permitNumber": "BL2024-1706",
   "portalUrl": "https://pine-trk.aspgov.com/eTRAKiT/Search/permit.aspx",
   "sessionId": "[redacted session id]",
@@ -267,9 +267,9 @@
       "downloaded": {
         "id": "applicant-response-rev2",
         "role": "applicant_response",
-        "sha256": "18a4d1cd17577fa4ebfaa8655cfc5119b9dad276cece34afc906b1eacfc9eca3",
+        "sha256": "c07ade8549e931468417ddde043eab2545eeb3228c212b0da22286994f5ed2db",
         "bytes": 95508,
-        "matchesPinned": true
+        "matchesPinned": false
       }
     },
     {
@@ -291,9 +291,9 @@
       "downloaded": {
         "id": "structural-S01-rev2",
         "role": "drawing_current",
-        "sha256": "13d4abf0fba11f8bd5b1545729300aeddf7feb700932371d7b77c9a73fbbc13a",
+        "sha256": "dc04387b697ec2b4ab09b7363261c313ff01ea1e9ff3ab30417f215ea1f879a3",
         "bytes": 727289,
-        "matchesPinned": true
+        "matchesPinned": false
       }
     },
     {
@@ -333,9 +333,9 @@
       "downloaded": {
         "id": "structural-S01-rev1-void",
         "role": "drawing_superseded",
-        "sha256": "8d74924f2ebe30ddc26f8a6b2a200cbcf2ffa895dfbcaf1de7ef447abed2394c",
+        "sha256": "2398e5419cb1772b0d7619331e0b58d7b28838fcef28ce71ba6a2d42829a6e29",
         "bytes": 617638,
-        "matchesPinned": true
+        "matchesPinned": false
       }
     },
     {

@@ -1,16 +1,21 @@
-{"at":"2026-09-29T05:39:09.827Z","name":"browser_created","detail":{"id":"[redacted session id]"}}
-{"at":"2026-09-29T05:39:16.374Z","name":"portal_permit_opened","detail":{"url":"https://pine-trk.aspgov.com/eTRAKiT/Search/permit.aspx"}}
-{"at":"2026-09-29T05:39:22.534Z","name":"portal_permit_info_captured","detail":{"status":"FINALED"}}
-{"at":"2026-09-29T05:39:22.832Z","name":"portal_attachments_listed","detail":{"count":23,"void":7}}
-{"at":"2026-09-29T05:39:41.418Z","name":"portal_reviews_captured","detail":{"count":17,"withNotes":6}}
-{"at":"2026-09-29T05:39:41.882Z","name":"portal_attachment_downloaded","detail":{"id":"applicant-response-rev2","bytes":95508,"matchesPinned":true,"void":false}}
-{"at":"2026-09-29T05:39:42.889Z","name":"portal_attachment_downloaded","detail":{"id":"structural-S01-rev2","bytes":727289,"matchesPinned":true,"void":false}}
-{"at":"2026-09-29T05:39:43.917Z","name":"portal_attachment_downloaded","detail":{"id":"structural-S01-rev1-void","bytes":617638,"matchesPinned":true,"void":true}}
-{"at":"2026-09-29T05:39:44.269Z","name":"snapshot_saved","detail":{"reviews":17,"attachments":23}}
-{"at":"2026-09-29T05:39:44.660Z","name":"sandbox_created","detail":{"id":"[redacted session id]"}}
-{"at":"2026-09-29T05:39:50.578Z","name":"sandbox_destroyed","detail":{}}
-{"at":"2026-09-29T05:39:50.582Z","name":"attachments_extracted","detail":{"documents":3,"pages":3}}
-{"at":"2026-09-29T05:39:50.585Z","name":"snapshot_compared","detail":{"changed":false}}
-{"at":"2026-09-29T05:39:50.589Z","name":"replay_reconstructed","detail":{"asOf":"2025-03-25","reviews":13}}
-{"at":"2026-09-29T05:39:59.710Z","name":"checklist_generated","detail":{"items":6,"questions":3}}
-{"at":"2026-09-29T05:39:59.731Z","name":"portal_report_generated","detail":{}}
+{"at":"2026-09-29T06:23:56.093Z","name":"browser_created","detail":{"id":"[redacted session id]"}}
+{"at":"2026-09-29T06:24:04.496Z","name":"portal_permit_opened","detail":{"url":"https://pine-trk.aspgov.com/eTRAKiT/Search/permit.aspx"}}
+{"at":"2026-09-29T06:24:11.125Z","name":"portal_permit_info_captured","detail":{"status":"FINALED"}}
+{"at":"2026-09-29T06:24:11.457Z","name":"portal_attachments_listed","detail":{"count":23,"void":7}}
+{"at":"2026-09-29T06:24:30.320Z","name":"portal_reviews_captured","detail":{"count":17,"withNotes":6}}
+{"at":"2026-09-29T06:24:30.848Z","name":"portal_attachment_downloaded","detail":{"id":"applicant-response-rev2","bytes":95508,"matchesPinned":false,"void":false}}
+{"at":"2026-09-29T06:24:32.312Z","name":"portal_attachment_downloaded","detail":{"id":"structural-S01-rev2","bytes":727289,"matchesPinned":false,"void":false}}
+{"at":"2026-09-29T06:24:33.281Z","name":"portal_attachment_downloaded","detail":{"id":"structural-S01-rev1-void","bytes":617638,"matchesPinned":false,"void":true}}
+{"at":"2026-09-29T06:24:50.259Z","name":"replay_unavailable","detail":{"errorType":"SolariError"}}
+{"at":"2026-09-29T06:24:50.262Z","name":"snapshot_saved","detail":{"reviews":17,"attachments":23}}
+{"at":"2026-09-29T06:24:50.675Z","name":"sandbox_created","detail":{"id":"[redacted session id]"}}
+{"at":"2026-09-29T06:24:56.513Z","name":"sandbox_destroyed","detail":{}}
+{"at":"2026-09-29T06:24:56.516Z","name":"attachments_extracted","detail":{"documents":3,"pages":3}}
+{"at":"2026-09-29T06:24:56.519Z","name":"snapshot_compared","detail":{"with":"1790662867450-pinecrest-live","changed":false}}
+{"at":"2026-09-29T06:24:56.522Z","name":"replay_reconstructed","detail":{"asOf":"2025-03-25","reviews":13}}
+{"at":"2026-09-29T06:25:05.636Z","name":"checklist_generated","detail":{"items":6,"questions":0}}
+{"at":"2026-09-29T06:25:06.187Z","name":"desktop_created","detail":{"id":"[redacted session id]","streamUrl":"wss://api.getsolari.com/stream/An2DV8BFJ2ENgWIDq4rFwTWpUPYAg0gSuoqCtoBlIjuLKp5yOK2dVZ-EKYiXTKqp287CkrLHivOs3IS3fWXkBwib7lz4DAlPMbkwJOfanVo-4QNsHlQHNq7CVuZ8CcUutKYqSbKjvnfFXqSpxRQ.yPrRdi_mvQlKaVfSpgCa_iBVGorCfxCQN060YZS5qBA"}}
+{"at":"2026-09-29T06:25:07.665Z","name":"desktop_tracker_written","detail":{"lines":18}}
+{"at":"2026-09-29T06:25:29.450Z","name":"desktop_tracker_opened","detail":{"app":"libreoffice","screenshotBytes":175209}}
+{"at":"2026-09-29T06:25:30.296Z","name":"desktop_destroyed","detail":{}}
+{"at":"2026-09-29T06:25:30.322Z","name":"portal_report_generated","detail":{}}

@@ -5,21 +5,26 @@ portal, opens the record, reads every departmental review and the reviewer's
 comment page behind it, lists every attachment with the portal's own labels,
 and downloads the applicant's response and the drawing revisions inside the
 same session. A Solari Sandbox extracts the PDF text in an isolated VM and is
-destroyed before anything reaches a model. The result is a dated snapshot you
-can diff against the last one, replay to an earlier checkpoint, and read as a
-coordinator's checklist where every claim links to the exact source text.
+destroyed before anything reaches a model. A Solari Desktop opens the resulting
+tracker in LibreOffice Calc on a real screen. The result is a dated snapshot
+that is diffed against the previous run automatically, can be replayed to an
+earlier checkpoint, and reads as a coordinator's checklist where every claim
+links to the exact source text.
 
-Two real public cases are wired in:
+Three real public cases are wired in, two of them on the same portal adapter:
 
 | Command | Case | What it demonstrates |
 | --- | --- | --- |
-| `npm run demo:pinecrest` | Permit BL2024-1706, Village of Pinecrest, Florida (eTRAKiT) | Portal navigation, reviewer comments, revision downloads, change detection, historical replay |
+| `npm run demo:pinecrest` | Permit BL2024-1706, Village of Pinecrest, Florida (eTRAKiT) | Reviewer comments, revision downloads with VOID labels, historical replay, AI-linked checklist |
+| `npm run demo:atherton` | Permit BP26-00421, Town of Atherton, California (eTRAKiT) | An open permit under review: live status monitoring and change detection on a portal that hides notes and attachments |
 | `npm run demo:farmdale` | Farmdale Apartments, Woodburn, Oregon (design review) | Long public documents turned into an evidence-linked timeline, conditions register and decisions |
 
 Open the finished reports without running anything at
 [dineshsai05.github.io/solari-cookbook](https://dineshsai05.github.io/solari-cookbook/),
 or from the tracked copies in [proof/](proof/README.md), which also explains
 what was redacted.
+
+![Walkthrough: search, permit info, reviews, reviewer comment, desktop tracker](proof/pinecrest/walkthrough.gif)
 
 ## Why this needs Solari
 
@@ -33,9 +38,14 @@ what was redacted.
   throw-away Solari Sandbox with a pinned `pypdfium2` and no credentials. The
   VM is killed before the model request, so the model only ever sees extracted
   text and the sandbox never idles on the bill.
+- **Coordinators live in spreadsheets.** With `--desktop`, the snapshot is
+  written to a CSV on a Solari Desktop and opened in LibreOffice Calc on the
+  screen, with a screenshot kept as evidence. The same primitive would drive a
+  legacy Windows tracker or a project-management desktop app.
 - **A coordinator has many permits in flight.** Each run is one bounded
-  browser session and one bounded sandbox. Snapshots are plain JSON, so
-  scheduling and fan-out are the caller's problem, not the adapter's.
+  browser session, one bounded sandbox and, optionally, one bounded desktop.
+  Snapshots are plain JSON, so scheduling and fan-out are the caller's problem,
+  not the adapter's.
 
 ## What a run produces
 
@@ -46,13 +56,16 @@ what was redacted.
   comment-to-response checklist, attachments with VOID labels, run evidence.
 - `snapshot.json`: permit fields, 17 review rows with notes and hashes, 23
   attachments with labels, keys and download hashes.
-- `diff.json` (with `--compare`): permit fields, review rows and attachment
-  labels that changed. A repeat run reports `changed: false`.
+- `diff.json`: permit fields, review rows and attachment labels that changed
+  since the latest earlier completed run of the same case. A repeat run reports
+  `changed: false`; the first run records `first_capture`. `--compare DIR`
+  picks a specific run, `--no-compare` skips it.
 - `replay.json` (with `--replay YYYY-MM-DD`): the event history filtered to
   that date and labelled as a reconstruction.
 - `analysis.json`, `model-response.json`: the checked checklist and the raw
   model reply, with token usage.
-- `documents.json`, `attachments/`, three screenshots, `manifest.json`,
+- `tracker.csv`, and with `--desktop`, `desktop-tracker.png`.
+- `documents.json`, `attachments/`, five step screenshots, `manifest.json`,
   `events.jsonl`.
 
 ## How it stays honest
@@ -101,24 +114,34 @@ AIML_MODEL=openai/gpt-4.1-mini-2025-04-14
 `npm start -- --doctor` reports which names are configured without printing
 values. There is no automatic model fallback.
 
-## Run the portal demo
+## Run the portal demos
 
 ```bash
-npm run demo:pinecrest
-npm run demo:pinecrest -- --compare artifacts/<previous-run> --replay 2025-03-25
-npm run demo:pinecrest -- --no-model      # browser and sandbox only
+npm run demo:pinecrest                         # compares with the latest earlier run automatically
+npm run demo:pinecrest -- --replay 2025-03-25 --desktop
+npm run demo:atherton                          # open permit, no notes published: monitoring only
+npm run demo:pinecrest -- --no-model           # browser and sandbox only
+node --import tsx src/portal-cli.ts --case <name>   # any case file under cases/
 ```
 
-The case file `cases/pinecrest.json` pins the portal origin, the permit
-number, the expected site address, and the SHA-256 of the three documents the
-demo downloads. A changed hash is reported in the snapshot and the report,
-not hidden. The permit is finalized, so every run is a historical replay of a
-closed case; the code paths for change detection are exercised by comparing
-consecutive captures.
+A case file pins the portal origin, the permit number, the expected site
+address, and the SHA-256 of any documents the demo downloads. A changed hash
+is reported in the snapshot and the report, not hidden. The adapter finds the
+portal's own labels for the search dropdowns and the Reviews tab, which differ
+between deployments ("PERMIT NUMBER" versus "Permit No", "Reviews" versus
+"Reviews(11)").
 
-Verified September 29, 2026: four consecutive live runs, each about one
-minute, the last three reporting no change against the previous snapshot. The
-final checklist request used 3,345 input and 1,276 output tokens.
+Pinecrest is finalized, so its runs are historical replays of a closed case
+and change detection is exercised by comparing consecutive captures. Atherton
+is under review with two review rows still pending, so a later run can detect
+a real change. When a portal publishes no reviewer notes or attachments, the
+sandbox and the model step are skipped and the report says so.
+
+Verified September 29, 2026: six Pinecrest runs and two Atherton runs, each
+about one minute, every comparison reporting no change. The last Pinecrest
+checklist request used 3,345 input and 1,276 output tokens. Solari's replay
+download returned 404 for every session on this account that day; the session
+ID is recorded in each manifest and the run keeps going without the replay.
 
 ## Run the document-review demo
 
@@ -156,8 +179,9 @@ npm run fixtures && python3 -m venv .venv && .venv/bin/python -m pip install -r 
 .venv/bin/python -m unittest discover -s python -p 'test_*.py' -v
 ```
 
-22 TypeScript tests cover the portal parser, attachment key hints, snapshot
-diffing, replay filtering, checklist coverage and citation rules, HTML
+26 TypeScript tests cover the portal parser, dropdown label matching,
+attachment key hints, snapshot diffing, replay filtering, latest-run
+selection, the tracker CSV, checklist coverage and citation rules, HTML
 escaping, the Farmdale evidence validator, the deck checklist, and mocked AIML
 transport failures. 6 Python tests cover PDF extraction, encrypted inputs,
 form round-trips and overflow rejection. No test makes a network call.
@@ -166,8 +190,10 @@ form round-trips and overflow rejection. No test makes a network call.
 
 - Read-only. Submission, payment, account access and edits to the applicant
   record are out of scope by design.
-- One portal family (CentralSquare eTRAKiT) and one Oregon document set. The
-  selectors in `src/portal-pinecrest.ts` are specific to that portal.
+- One portal family (CentralSquare eTRAKiT, two deployments verified) and one
+  Oregon document set. The selectors in `src/portal-etrakit.ts` are specific
+  to that portal family; Denton TX and El Dorado County CA deployments were
+  probed and publish no review rows at all.
 - Text only. Drawings are downloaded and hashed, not interpreted; scanned
   pages need OCR that is not implemented.
 - Bounded: 40 attachment pages, 15 MB per file, 160,000 characters of model
@@ -179,7 +205,8 @@ form round-trips and overflow rejection. No test makes a network call.
 
 ```
 cases/            pinned case manifests and review notes
-src/portal-*.ts   eTRAKiT adapter, snapshot diff and replay, checklist validation, report
+src/portal-*.ts   eTRAKiT adapter, snapshot diff and replay, latest-run lookup, checklist validation, report
+src/desktop-tracker.ts  tracker CSV and the Solari Desktop step
 src/case-*.ts     Farmdale document review
 src/passages.ts   passage slicing and citation resolution shared by both
 src/sandbox-python.ts  sandbox bootstrap with pinned pypdfium2
@@ -194,6 +221,10 @@ tests/            node:test suites
 Pinecrest: [public permit record](https://pine-trk.aspgov.com/eTRAKiT/Search/permit.aspx?activityNo=BL2024-1706),
 qualified with real Solari sessions on September 29, 2026. Reviewer names and
 the site address are public record on that page.
+
+Atherton: [public permit record](https://athr-trk.aspgov.com/eTRAKiT/Search/permit.aspx?activityNo=BP26-00421),
+found by searching the town's portal for permits applied for after June 1,
+2026 and qualified the same day.
 
 Farmdale: [official project page](https://www.woodburn-or.gov/778/Design-Review-DR-25-02---Marion-County-H)
 and five public PDFs pinned by hash in `cases/farmdale.json`.

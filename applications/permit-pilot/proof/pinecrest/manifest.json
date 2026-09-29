@@ -3,10 +3,12 @@
   "status": "completed",
   "case": "Pinecrest permit BL2024-1706",
   "permitNumber": "BL2024-1706",
-  "startedAt": "2026-09-29T05:39:07.989Z",
+  "startedAt": "2026-09-29T06:23:54.475Z",
   "provider": "aiml",
   "model": "openai/gpt-4.1-mini-2025-04-14",
-  "comparedWith": "1790660245255-pinecrest-live",
+  "comparedWith": "1790662867450-pinecrest-live",
   "replayAsOf": "2025-03-25",
-  "browserSessionId": "[redacted session id]"
+  "browserSessionId": "[redacted session id]",
+  "desktop": true,
+  "replaySaved": false
 }

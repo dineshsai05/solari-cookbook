@@ -1,0 +1,14 @@
+{
+  "mode": "live-public-portal",
+  "status": "completed",
+  "case": "Atherton permit BP26-00421",
+  "permitNumber": "BP26-00421",
+  "startedAt": "2026-09-29T06:16:51.875Z",
+  "provider": "aiml",
+  "model": "openai/gpt-4.1-mini-2025-04-14",
+  "comparedWith": "1790662535040-atherton-live",
+  "replayAsOf": null,
+  "browserSessionId": "[redacted session id]",
+  "desktop": false,
+  "replaySaved": false
+}
