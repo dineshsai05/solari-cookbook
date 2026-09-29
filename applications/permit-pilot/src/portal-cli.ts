@@ -78,11 +78,11 @@ async function main() {
       await sandbox.files.write(`${work}/attachments.json`, JSON.stringify(staged.map(({ id, file, url }) => ({ id, file, url }))));
       await sandbox.files.write(`${work}/extract.py`, await readFile(join(root, 'python/portal_extract.py')));
       await run(python, [`${work}/extract.py`, work]);
-      return JSON.parse(Buffer.from(await sandbox.files.read(`${work}/documents.json`)).toString()) as { id: string; url: string; pages: PassageDocument['pages'] }[];
+      return JSON.parse(Buffer.from(await sandbox.files.read(`${work}/documents.json`)).toString()) as PassageDocument[];
     });
     if (files.size === 0) await event('sandbox_skipped', { reason: 'no attachments to extract' });
     for (const pin of c.attachments) if (extracted.find(d => d.id === pin.id)?.pages.length !== pin.pages) throw new Error(`Attachment page count changed: ${pin.id}`);
-    const documents: PassageDocument[] = [...reviewDocuments(snapshot), ...extracted.map(d => ({ id: attachmentDocId(d.id), url: d.url, pages: d.pages }))];
+    const documents: PassageDocument[] = [...reviewDocuments(snapshot), ...extracted.map(d => ({ ...d, id: attachmentDocId(d.id) }))];
     await writeFile(join(out, 'documents.json'), JSON.stringify(documents, null, 2));
     await event('attachments_extracted', { documents: extracted.length, pages: extracted.reduce((n, d) => n + d.pages.length, 0) });
 

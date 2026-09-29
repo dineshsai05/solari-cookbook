@@ -279,3 +279,59 @@ excluding Solari time.
 
 Built inside the official Solari cookbook, cloned at
 `a435d2ac5ae87bdf9ee4f6c91f97da9501359560`.
+
+### Guided public demo and safe live trial
+
+The permanent entry point is https://dineshsai05.github.io/solari-cookbook/try.html.
+It includes instructions, a six-stage recorded walkthrough, source reports, downloads,
+and feedback by email. Recorded evidence is explicitly labelled. `public/live.json`
+points to a temporary live host; the page checks expiration and health before offering
+it. An offline host never removes access to the examples.
+
+`node --import tsx scripts/publish-demo.ts` publishes the permanent page. The existing
+`npm run host -- --publish-redirect` command now updates the guided page and live
+configuration instead of replacing the page with an unconditional redirect.
+
+The public runner accepts only configured Pinecrest/Atherton portals. API keys stay
+on the server. Admission is serialized and the global budget is persisted before a
+worker starts, so concurrent requests, forged forwarding headers and restarts cannot
+reset it. Defaults: 10 captures per rolling 24 hours, 5 per socket address per hour,
+8 queued, one active, 10-minute timeout. Reverse-proxied users may share the hourly
+allowance because untrusted forwarding headers are intentionally ignored. A limit
+counts attempts, including failures; it is a run cap, not a dollar-denominated budget.
+
+- `PERMITPILOT_DAILY_LIMIT`: integer 1–100; default 10.
+- `PERMITPILOT_LIVE=0`: pause new live captures.
+- `PERMITPILOT_DATA_DIR`: persistent writable directory for jobs and budget.
+- `PERMITPILOT_CONTACT`: visible feedback contact.
+
+Completed report links survive a process restart when the data directory survives.
+Interrupted jobs are marked failed and are never automatically rerun. Only explicitly
+allowed artifacts are served; job records, email addresses and worker logs are private.
+Reports are link-accessible, not authenticated private workspaces. Do not process
+confidential material through this public trial.
+
+### Durable hosting boundary
+
+Solari's current sandbox host is a temporary trial (approximately five hours), not
+production web hosting. Jobs and the budget are local to that host and are lost when
+its filesystem is destroyed. Do not claim always-on monitoring or permanent report
+storage. This project does not yet implement PostgreSQL or editable team tasks.
+
+For a durable single-instance deployment, the Dockerfile runs as a non-root user and
+exposes port 8080. Build it locally, provide the existing API environment variables as
+secrets, and mount a persistent volume at `/data`. Put it behind an HTTPS reverse proxy.
+Only one server process may use a data directory: admission and filesystem locking
+are process-local. Back up that volume; restoring an older backup can restore an older
+budget too. A multi-instance service requires a shared transactional database and
+queue before horizontal scaling. No new hosting subscription is provisioned by these
+scripts. Do not republish/rehost automatically to bypass run limits.
+
+### Regression checks
+
+`npm run typecheck && npm test` includes a real HTTP-server test with a fake worker.
+It verifies concurrent admission, forged headers, restart recovery, persistent caps,
+artifact restrictions and browser-script syntax without calling paid APIs. Unit tests
+cover replay milestones, same-name attachment replacements, bounded revision pairs
+and disclosure of unread pages. `scripts/refresh-proof-reports.ts` re-renders historical
+proof with current disclosures without pretending to recapture the portal.

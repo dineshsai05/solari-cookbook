@@ -26,9 +26,17 @@ export function selectAttachments(list: Attachment[], max = 6): AttachmentTarget
   const chosen: AttachmentTarget[] = []; const used = new Set<string>(); const ids = new Set<string>();
   const add = (a: Attachment, role: string) => { if (chosen.length >= max || used.has(a.key)) return; used.add(a.key); let id = slug(a.name); let n = 2; while (ids.has(id)) id = `${slug(a.name)}-${n++}`; ids.add(id); chosen.push({ attachment: a, id, role, pin: null }); };
   for (const a of list.filter(a => !a.void && isResponse(a)).sort(newest).slice(0, 3)) add(a, 'applicant_response');
-  const drawings = list.filter(a => !a.void && !isResponse(a) && isDrawing(a)).sort(newest).slice(0, Math.max(0, max - chosen.length));
-  for (const a of drawings) add(a, 'drawing_current');
-  for (const d of drawings) { const token = sheetToken(d.name); if (!token) continue; const prior = list.filter(a => a.void && sheetToken(a.name) === token).sort(newest)[0]; if (prior) add(prior, 'drawing_superseded'); }
+  const drawings = list.filter(a => !a.void && !isResponse(a) && isDrawing(a)).sort(newest);
+  const priorFor = (d: Attachment) => {
+    const token = sheetToken(d.name);
+    return token ? list.filter(a => a.void && sheetToken(a.name) === token).sort(newest)[0] : undefined;
+  };
+  // Reserve complete current/superseded pairs before filling remaining slots.
+  for (const d of drawings) {
+    const prior = priorFor(d);
+    if (prior && max - chosen.length >= 2) { add(d, 'drawing_current'); add(prior, 'drawing_superseded'); }
+  }
+  for (const d of drawings) add(d, 'drawing_current');
   return chosen;
 }
 /** Deployments label the search dropdowns differently ("PERMIT NUMBER", "Permit No", "PERMIT_NO"). Picks the option to use or returns null. */

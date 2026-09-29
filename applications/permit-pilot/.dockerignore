@@ -1,0 +1,6 @@
+.env*
+node_modules
+artifacts
+proof
+outreach
+.git

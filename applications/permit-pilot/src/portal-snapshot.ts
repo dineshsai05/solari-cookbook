@@ -55,7 +55,7 @@ export interface SnapshotDiff {
 
 /** Compares two captures of the same permit. Capture timestamps and session IDs are ignored; only portal content counts. */
 export function diffSnapshots(previous: Snapshot, next: Snapshot): SnapshotDiff {
-  if (previous.permitNumber !== next.permitNumber) throw new Error('Snapshots describe different permits');
+  if (previous.permitNumber !== next.permitNumber || new URL(previous.portalUrl).origin !== new URL(next.portalUrl).origin) throw new Error('Snapshots describe different permits');
   const diff: SnapshotDiff = { changed: false, permit: [], reviews: { added: [], removed: [], changed: [] }, attachments: { added: [], removed: [], changed: [] } };
   for (const field of Object.keys(next.permit) as (keyof Snapshot['permit'])[]) {
     if (previous.permit[field] !== next.permit[field]) diff.permit.push({ field, from: previous.permit[field], to: next.permit[field] });
@@ -69,6 +69,14 @@ export function diffSnapshots(previous: Snapshot, next: Snapshot): SnapshotDiff 
   const r = compare(previous.reviews, next.reviews, 'recordId', ['type', 'reviewer', 'status', 'submitted', 'completed', 'dueDate', 'group', 'remarks', 'sha256']);
   diff.reviews = { added: r.added, removed: r.removed, changed: r.changed.map(c => ({ recordId: c.key, fields: c.fields })) };
   const a = compare(previous.attachments, next.attachments, 'key', ['label', 'name', 'void']);
+  for (const attachment of next.attachments) {
+    const old = previous.attachments.find(x => x.key === attachment.key);
+    if (old?.downloaded && attachment.downloaded && old.downloaded.sha256 !== attachment.downloaded.sha256) {
+      const entry = a.changed.find(x => x.key === attachment.key);
+      if (entry) entry.fields.push('contentSha256');
+      else a.changed.push({ key: attachment.key, fields: ['contentSha256'] });
+    }
+  }
   diff.attachments = a;
   diff.changed = diff.permit.length > 0 || r.added.length > 0 || r.removed.length > 0 || r.changed.length > 0 || a.added.length > 0 || a.removed.length > 0 || a.changed.length > 0;
   return diff;
@@ -87,7 +95,9 @@ export function replaySnapshot(snapshot: Snapshot, asOf: string): Snapshot {
   const after = (value: string | null) => { const iso = toIso(value); return iso !== null && iso > asOf; };
   const permit = { ...snapshot.permit };
   for (const field of ['approvedDate', 'issuedDate', 'finaledDate', 'expirationDate'] as const) if (after(permit[field])) permit[field] = null;
-  if (after(snapshot.permit.approvedDate) || after(snapshot.permit.issuedDate) || after(snapshot.permit.finaledDate)) permit.status = 'REPLAY: not yet approved on this date';
+  if (after(snapshot.permit.approvedDate) || after(snapshot.permit.issuedDate) || after(snapshot.permit.finaledDate)) {
+    permit.status = permit.finaledDate ? 'REPLAY: finaled milestone reached' : permit.issuedDate ? 'REPLAY: issued milestone reached' : permit.approvedDate ? 'REPLAY: approved milestone reached' : 'REPLAY: approval not recorded by this date';
+  }
   const reviews = snapshot.reviews.filter(r => !after(r.submitted)).map(r => after(r.completed) ? { ...r, completed: null, status: 'REPLAY: pending on this date', notes: '', remarks: null, sha256: r.sha256 } : r);
   const attachments = snapshot.attachments.filter(a => a.keyTimestampHint === null || a.keyTimestampHint.slice(0, 10) <= asOf);
   return { ...snapshot, permit, reviews, attachments, replay: { asOf, from: snapshot.capturedAt } };

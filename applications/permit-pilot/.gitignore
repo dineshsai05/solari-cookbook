@@ -5,3 +5,7 @@ __pycache__/
 artifacts/
 fixtures/generated/
 dist/
+
+outreach/
+
+!package-lock.json

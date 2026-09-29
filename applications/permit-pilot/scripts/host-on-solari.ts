@@ -1,11 +1,12 @@
 // Usage: node --import tsx scripts/host-on-solari.ts [--stop] [--status] [--publish-redirect]
-// --publish-redirect also rewrites try.html on the gh-pages branch of the
-// enclosing repository so the short link keeps pointing at the new URL.
+// --publish-redirect publishes the permanent guided demo and updates live.json
+// on gh-pages. It no longer replaces the page with an expiring redirect.
 // Hosts the web demo inside a Solari sandbox and exposes it on a public
 // *.preview.getsolari.com URL. The sandbox runs this application's server,
 // which in turn creates its own browser, sandbox and desktop sessions per run.
 // Solari clamps sandbox lifetime (about five hours on this account), so this
 // script stays in the foreground sending a keep-alive; run it again to re-host.
+import { publishDemo } from './publish-demo.js';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
@@ -26,10 +27,16 @@ if (process.argv.includes('--status')) {
   const saved = JSON.parse(await readFile(state, 'utf8')); const v = await client.get(saved.sandboxId).catch(() => null); console.log(v ? `${v.state} until ${saved.expiresAt}: ${saved.url}` : 'gone'); process.exit(0);
 }
 for (const key of ['SOLARI_API_KEY', 'AIML_API_KEY', 'AIML_MODEL']) if (!process.env[key]?.trim()) throw new Error(`${key} is missing`);
+// Do not leave a previous trial consuming the account's sandbox slots.
+let previous: { sandboxId: string } | null = null;
+try { previous = JSON.parse(await readFile(state, 'utf8')); } catch { /* first deployment */ }
+if (previous && await client.get(previous.sandboxId).then(v => v.state === 'running', () => false)) {
+  throw new Error('An existing demo host is running. Stop it with npm run host -- --stop before replacing it.');
+}
 const tmp = await mkdtemp(join(tmpdir(), 'permit-pilot-host-'));
 const tarball = join(tmp, 'app.tgz');
 // Ship the working tree, not a git export, so an unpushed fix can be hosted. Secrets, runs and proof stay home.
-await promisify(execFile)('tar', ['-czf', tarball, '-C', root, '--exclude=node_modules', '--exclude=.venv', '--exclude=artifacts', '--exclude=proof', '--exclude=fixtures/generated', '--exclude=.env', '--exclude=python/__pycache__', '.']);
+await promisify(execFile)('tar', ['-czf', tarball, '-C', root, '--exclude=node_modules', '--exclude=.venv', '--exclude=artifacts', '--exclude=proof', '--exclude=fixtures/generated', '--exclude=.env*', '--exclude=outreach', '--exclude=python/__pycache__', '.']);
 const bytes = await readFile(tarball);
 const sandbox = await client.create({ template: 'base', timeoutMs: 5 * 3_600_000, metadata: { app: 'permit-pilot-web' } });
 console.log('sandbox', sandbox.id.slice(0, 12) + '…', 'expires', sandbox.expiresAt);
@@ -39,9 +46,9 @@ try {
   await run('mkdir', ['-p', '/app']);
   await sandbox.files.write('/app/app.tgz', bytes);
   await run('tar', ['-xzf', '/app/app.tgz', '-C', '/app']);
-  await sandbox.files.write('/app/.env', `SOLARI_API_KEY=${process.env.SOLARI_API_KEY}\nAIML_API_KEY=${process.env.AIML_API_KEY}\nAIML_MODEL=${process.env.AIML_MODEL}\nPORT=${PORT}\nPERMITPILOT_WEB_DESKTOP=${process.env.PERMITPILOT_WEB_DESKTOP ?? '0'}\nPERMITPILOT_CONTACT=${process.env.PERMITPILOT_CONTACT ?? ''}\n`, 0o600);
+  await sandbox.files.write('/app/.env', `SOLARI_API_KEY=${process.env.SOLARI_API_KEY}\nAIML_API_KEY=${process.env.AIML_API_KEY}\nAIML_MODEL=${process.env.AIML_MODEL}\nPORT=${PORT}\nPERMITPILOT_WEB_DESKTOP=${process.env.PERMITPILOT_WEB_DESKTOP ?? '0'}\nPERMITPILOT_CONTACT=${process.env.PERMITPILOT_CONTACT ?? 'dineshsai050106@gmail.com'}\nPERMITPILOT_DAILY_LIMIT=${process.env.PERMITPILOT_DAILY_LIMIT ?? '10'}\n`, 0o600);
   console.log('installing dependencies in the sandbox…');
-  await run('sh', ['-c', 'cd /app && npm install --no-audit --no-fund --loglevel=error 2>&1 | tail -3'], 600_000);
+  await run('sh', ['-c', 'cd /app && npm ci --no-audit --no-fund --loglevel=error'], 600_000);
   await run('sh', ['-c', `cd /app && nohup node --import tsx src/server.ts > /app/server.log 2>&1 &`]);
   const { url } = await sandbox.previewUrl(PORT);
   let healthy = false;
@@ -49,31 +56,15 @@ try {
   if (!healthy) { const log = await sandbox.files.readText('/app/server.log').catch(() => ''); throw new Error('Server did not come up:\n' + log.slice(-1500)); }
   await writeFile(state, JSON.stringify({ sandboxId: sandbox.id, url, createdAt: new Date().toISOString(), expiresAt: sandbox.expiresAt }, null, 2));
   console.log('\nLIVE:', url, '\n\nKeep this process running. Ctrl-C leaves the sandbox up until', sandbox.expiresAt, '; --stop kills it.');
-  if (process.argv.includes('--publish-redirect')) await publishRedirect(url).catch(e => console.error('redirect not published:', e instanceof Error ? e.message.slice(0, 200) : e));
+  if (process.argv.includes('--publish-redirect')) await publishDemo({ url, expiresAt: String(sandbox.expiresAt) });
   process.on('SIGINT', () => { console.log('\nleaving the sandbox running; use --stop to end it'); sandbox.close(); process.exit(0); });
-  while (true) {
+  while (Date.now() < new Date(sandbox.expiresAt).getTime()) {
     await new Promise(r => setTimeout(r, 180_000));
     try { await sandbox.commands.run('true', { timeoutMs: 30_000 }); const h = await fetch(url.replace(/\?.*$/, '/healthz$&')).then(r => r.json()).catch(() => null); console.log(new Date().toISOString(), 'alive', JSON.stringify(h)); }
     catch (error) { console.log(new Date().toISOString(), 'keep-alive failed:', error instanceof Error ? error.message.slice(0, 120) : error); }
   }
+  sandbox.close(); console.log('Trial host lifetime ended. The permanent demo remains available.');
 } catch (error) {
   console.error(error instanceof Error ? error.message.split(process.env.SOLARI_API_KEY!).join('[REDACTED]') : error);
   await sandbox.kill().catch(() => undefined); sandbox.close(); process.exit(1);
-}
-
-async function publishRedirect(url: string) {
-  const git = async (...args: string[]) => (await promisify(execFile)('git', args, { cwd: root })).stdout.trim();
-  const repo = await git('rev-parse', '--show-toplevel');
-  const wt = await mkdtemp(join(tmpdir(), 'permit-pilot-pages-'));
-  const g = async (...args: string[]) => (await promisify(execFile)('git', args, { cwd: repo })).stdout.trim();
-  await g('worktree', 'add', '--force', wt, 'gh-pages');
-  try {
-    const escaped = url.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-    await writeFile(join(wt, 'try.html'), `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>PermitPilot</title><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0;url=${escaped}"><script>location.replace(${JSON.stringify(url)});</script></head><body><p>Opening the PermitPilot demo… <a href="${escaped}">Continue</a></p></body></html>\n`);
-    const gw = async (...args: string[]) => (await promisify(execFile)('git', args, { cwd: wt })).stdout.trim();
-    await gw('add', 'try.html');
-    await gw('-c', 'user.name=dineshsai05', '-c', 'user.email=dineshsai050106@gmail.com', 'commit', '-q', '-m', 'Point the live demo redirect at the current host');
-    await gw('push', '-q', 'fork', 'gh-pages');
-    console.log('redirect published: https://dineshsai05.github.io/solari-cookbook/try');
-  } finally { await g('worktree', 'remove', '--force', wt).catch(() => undefined); }
 }

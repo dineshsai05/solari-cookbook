@@ -1,7 +1,7 @@
 // Evidence passages: the host slices extracted text into numbered pieces, the
 // model may only cite passage IDs, and the host reinserts the immutable original
 // text. The model never writes a quotation, so it cannot fabricate one.
-export interface PassageDocument { id: string; url: string; pages: { number: number; text: string; textTruncated: boolean }[] }
+export interface PassageDocument { id: string; url: string; pagesTotal?: number; pagesTruncated?: number; pages: { number: number; text: string; textTruncated: boolean }[] }
 export interface Passage { passageId: string; documentId: string; page: number; quote: string }
 export interface Evidence { documentId: string; page: number; quote: string }
 

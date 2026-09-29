@@ -22,10 +22,10 @@ test('automatic selection takes responses, newest drawings, and the VOID revisio
   const chosen = selectAttachments(listing);
   assert.deepEqual(chosen.map(c => [c.id, c.role]), [
     ['answer-sheet-rev-2-04-28-2025', 'applicant_response'],
-    ['7559-structural-calculations-ss', 'drawing_current'],
     ['7-s-01-rev2', 'drawing_current'],
-    ['8-e-01-rev1', 'drawing_current'],
     ['7-s-01-rev1', 'drawing_superseded'],
+    ['7559-structural-calculations-ss', 'drawing_current'],
+    ['8-e-01-rev1', 'drawing_current'],
   ]);
   assert.ok(chosen.every(c => c.pin === null));
   assert.equal(selectAttachments(listing, 2).length, 2, 'bounded by max');
@@ -48,4 +48,13 @@ test('permit numbers and portals are validated before anything touches the netwo
   await assert.rejects(resolveCase(dir, '../pinecrest', 'BL1'), /case name/);
   await assert.rejects(resolveCase(dir, 'pinecrest', 'bad permit'), /unexpected characters/);
   assert.deepEqual((await listPortals(dir)).map(p => p.slug), ['pinecrest']);
+});
+
+
+test('busy attachment lists still include a superseded drawing within the budget', () => {
+  const busy = [...listing, ...Array.from({ length: 10 }, (_, i) => att(`EXTRA:${i}`, 'Plan', `A-${i+10}.pdf`))];
+  const chosen = selectAttachments(busy);
+  assert.equal(chosen.length, 6);
+  assert.ok(chosen.some(x => x.role === 'drawing_superseded'));
+  for (const prior of chosen.filter(x => x.role === 'drawing_superseded')) assert.ok(chosen.some(x => x.role === 'drawing_current' && x.attachment.name.includes('S-01')));
 });

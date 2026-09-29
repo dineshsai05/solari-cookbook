@@ -130,3 +130,23 @@ test('report explains a skipped checklist, an empty attachment list, and shows t
   const html = portalReport({ ...c, notes: 'Notes hidden by the town.' }, empty, { model: null, usage: null, capturedAt: empty.capturedAt, diff: null, comparedWith: null, replay: null, analysis: null, documents: [], sessionId: null, checklistSkipped: 'nothing to link', desktop: { app: 'libreoffice', screenshot: 'desktop-tracker.png' }, replaySaved: true });
   assert.ok(html.includes('nothing to link')); assert.ok(html.includes('No attachments are published')); assert.ok(html.includes('LibreOffice Calc')); assert.ok(html.includes('desktop-tracker.png')); assert.ok(html.includes('replay.ndjson')); assert.ok(html.includes('Notes hidden by the town.'));
 });
+
+test('replay preserves approval and issuance milestones before finalization', () => {
+  assert.match(replaySnapshot(base, '2025-05-10').permit.status!, /approved milestone/);
+  assert.match(replaySnapshot(base, '2025-06-01').permit.status!, /issued milestone/);
+  assert.equal(replaySnapshot(base, '2025-06-01').permit.issuedDate, '5/21/2025');
+});
+test('same-name PDF replacements are detected by content hash', () => {
+  const next = structuredClone(base); next.attachments[2]!.downloaded!.sha256 = 'f'.repeat(64);
+  assert.deepEqual(diffSnapshots(base, next).attachments.changed, [{ key: next.attachments[2]!.key, fields: ['contentSha256'] }]);
+  assert.equal(diffSnapshots(base, next).changed, true);
+  next.attachments[2]!.downloaded = null;
+  assert.equal(diffSnapshots(base, next).changed, false, 'not downloaded is not evidence of a content change');
+  assert.throws(() => diffSnapshots(base, { ...base, portalUrl: 'https://different.example/permit' }), /different permits/);
+});
+test('reports disclose omitted pages, skipped files and text truncation', () => {
+  const html = portalReport(c, base, { model: null, usage: null, capturedAt: base.capturedAt, diff: null, comparedWith: null, replay: null, analysis: null, sessionId: null, documents: [{ id: 'attachment:large-response', url: 'https://example.com/a', pagesTotal: 13, pagesTruncated: 1, pages: [{ number: 1, text: 'excerpt', textTruncated: true }] }] });
+  assert.match(html, /1 pages omitted/); assert.match(html, /some page text truncated/);
+  assert.match(html, /2 listed attachments were not downloaded/);
+  assert.match(html, /may exist elsewhere/);
+});

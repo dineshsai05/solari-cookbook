@@ -15,7 +15,8 @@
     "demo:pinecrest": "node --import tsx src/portal-cli.ts --case pinecrest",
     "demo:atherton": "node --import tsx src/portal-cli.ts --case atherton",
     "serve": "node --import tsx src/server.ts",
-    "host": "node --import tsx scripts/host-on-solari.ts"
+    "host": "node --import tsx scripts/host-on-solari.ts",
+    "publish:demo": "node --import tsx scripts/publish-demo.ts"
   },
   "dependencies": {
     "@solarisdk/browser": "0.1.5",

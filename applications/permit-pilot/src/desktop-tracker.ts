@@ -9,7 +9,7 @@ import type { PortalAnalysisResult } from './portal-analysis.js';
 // real screen, and keeps a screenshot as evidence. The desktop is destroyed
 // afterwards. It receives the tracker file only, never API keys.
 
-const cell = (v: unknown) => { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+const cell = (v: unknown) => { const raw = String(v ?? ''); const s = /^[\s]*[=+@-]/.test(raw) ? `'${raw}` : raw; return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 export function trackerCsv(snapshot: Snapshot, analysis: PortalAnalysisResult | null): string {
   const header = ['permit', 'overall_status', 'review', 'reviewer', 'outcome', 'submitted', 'completed', 'due', 'has_notes', 'response_in_packet', 'captured_at'];
   const rows = snapshot.reviews.map(r => {
