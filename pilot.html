@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PermitPilot pilot</title>
+<meta name="description" content="Try PermitPilot on one of your own permits: send a permit number, get back a report the next day. Public records only, nothing installed, nothing submitted.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f4f5f0;--ink:#20312e;--muted:#52645e;--rule:#d7dfd8;--card:#ffffff;--accent:#197967;--accent-ink:#0f5a4c;--warn:#fff1cc;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15201d;--ink:#e6ece8;--muted:#a3b3ad;--rule:#2d3d38;--card:#1c2925;--accent:#5fbfa9;--accent-ink:#8fd6c5;--warn:#3d3410;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15201d;--ink:#e6ece8;--muted:#a3b3ad;--rule:#2d3d38;--card:#1c2925;--accent:#5fbfa9;--accent-ink:#8fd6c5;--warn:#3d3410;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans",system-ui,sans-serif;padding-block:40px;padding-inline:20px}
+main{max-width:820px;margin:0 auto;display:grid;gap:36px}
+h1,h2{font-family:"Source Serif 4",Georgia,serif;text-wrap:balance;line-height:1.15;margin:0}h1{font-size:clamp(30px,5vw,44px)}h2{font-size:24px}
+.eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:12px;color:var(--muted);font-weight:600}
+p{margin:0}.lede{font-size:19px;max-width:62ch}.muted{color:var(--muted)}a{color:var(--accent-ink)}
+.steps{display:grid;gap:14px;counter-reset:s}.step{display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px}
+.step b{display:block;margin-bottom:4px}.step::before{counter-increment:s;content:counter(s);font-family:"Source Serif 4",serif;font-weight:700;font-size:26px;color:var(--accent);line-height:1}
+.reports{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.report{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px;display:grid;gap:8px;align-content:start}.report small{color:var(--muted)}
+.gif{width:100%;border:1px solid var(--rule);border-radius:10px}
+.notice{background:var(--warn);border-radius:10px;padding:16px 18px}
+.email{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:17px;background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;display:inline-flex;gap:12px;align-items:center;flex-wrap:wrap}
+button{font:inherit;font-weight:600;background:var(--accent);color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer}button:focus-visible{outline:3px solid var(--accent-ink);outline-offset:2px}
+ul{margin:0;padding-left:20px}li{margin:4px 0}dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}dt{font-weight:600}dd{margin:0}
+@media(max-width:520px){dl{grid-template-columns:1fr}.step{grid-template-columns:32px 1fr}}
+</style></head><body><main>
+<header style="display:grid;gap:14px"><span class="eyebrow">PermitPilot · pilot for permit professionals</span><h1>Give me one permit number. I'll send back what the portal says about it, with every reviewer comment linked to its source.</h1><p class="lede">PermitPilot reads a city's public permit portal the way a coordinator does: it searches the permit, opens every departmental review and the reviewer's comment page behind it, lists attachments with the portal's own labels (including VOID), downloads the applicant's response and drawing revisions, and links each comment to what the applicant said about it. Run it again and it tells you exactly what changed.</p></header>
+<img class="gif" src="pinecrest/walkthrough.gif" alt="Walkthrough: search form, permit record, reviews tab, reviewer comment page, and the tracker spreadsheet opened on a desktop">
+<section style="display:grid;gap:14px"><h2>How the pilot works</h2><div class="steps">
+<div class="step"><div><b>Email one permit number.</b> Any permit on the Village of Pinecrest or Town of Atherton portals works today, and most other CentralSquare eTRAKiT cities can be added in a day. Public records only, so an active or closed permit is fine, yours or one you are watching for a client.</div></div>
+<div class="step"><div><b>Get a report the next business day.</b> A private link: overall status separated from review history, review cycles, verbatim reviewer comments, the comment-to-response checklist, attachments, and a tracker spreadsheet you can drop into your own.</div></div>
+<div class="step"><div><b>Tell me if it is right.</b> Ten minutes on a call, or two sentences by email. What did it get wrong, what would you actually use, what does your current process look like. That is the whole price.</div></div>
+</div></section>
+<section style="display:grid;gap:14px"><h2>Send a permit number to</h2><div class="email"><span id="addr">himashanthi21@gmail.com</span><button id="copy" type="button">Copy address</button></div><p class="muted">Subject line "PermitPilot pilot" helps me find it. Include the city and the permit number; the site address is optional. No account, no install, no key to buy.</p></section>
+<section style="display:grid;gap:14px"><h2>What a report looks like</h2><div class="reports">
+<a class="report" href="pinecrest/report.html"><b>Pinecrest, FL · BL2024-1706</b><span>Pool and water-feature permit. 17 reviews, 6 with comments, 23 attachments, applicant response and two structural revisions, replay as of March 25, 2025.</span><small>Finalized case, full detail</small></a>
+<a class="report" href="atherton/report.html"><b>Atherton, CA · BP26-00421</b><span>Open grading and drainage permit with two reviews still pending. The town hides comments, so this one is pure status monitoring with change detection.</span><small>Live case, monitoring only</small></a>
+<a class="report" href="farmdale/report.html"><b>Woodburn, OR · Farmdale Apartments</b><span>A 45-unit design review turned into an evidence-linked timeline, conditions register and decisions from 43 pages of public PDFs.</span><small>Document review</small></a>
+</div></section>
+<section style="display:grid;gap:14px"><h2>What it will not do</h2><ul><li>It never logs in, submits, pays, or edits anything. The only form it fills is the public search box.</li><li>It does not read drawings. Revisions are downloaded and hashed, not interpreted.</li><li>Applicant responses are shown as assertions, never as proof a comment was resolved. The portal's own status rows are the record.</li><li>Every quote is checked against the page it came from. That proves traceability, not that a summary is right, which is why I want your read on it.</li></ul></section>
+<section class="notice"><p><b>Who is behind this.</b> Dinesh, building PermitPilot on Solari's cloud browser, sandbox and desktop infrastructure as an entry to the Solari challenge. The code is public at <a href="https://github.com/dineshsai05/solari-cookbook/tree/permit-pilot/applications/permit-pilot">github.com/dineshsai05/solari-cookbook</a>. Your permit number and email are used for the pilot only and are not published.</p></section>
+<dl><dt>Portals today</dt><dd>Village of Pinecrest, FL · Town of Atherton, CA · other eTRAKiT cities on request</dd><dt>Turnaround</dt><dd>Next business day</dd><dt>Cost</dt><dd>Your feedback</dd></dl>
+</main>
+<script>
+document.getElementById('copy').addEventListener('click',async()=>{const b=document.getElementById('copy');const t=document.getElementById('addr').textContent;try{await navigator.clipboard.writeText(t);b.textContent='Copied';}catch{const r=document.createRange();r.selectNodeContents(document.getElementById('addr'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Select and copy';}setTimeout(()=>{b.textContent='Copy address';},2000);});
+</script></body></html>
