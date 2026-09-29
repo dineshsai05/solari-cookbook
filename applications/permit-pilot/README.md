@@ -16,10 +16,10 @@ Two real public cases are wired in:
 | `npm run demo:pinecrest` | Permit BL2024-1706, Village of Pinecrest, Florida (eTRAKiT) | Portal navigation, reviewer comments, revision downloads, change detection, historical replay |
 | `npm run demo:farmdale` | Farmdale Apartments, Woodburn, Oregon (design review) | Long public documents turned into an evidence-linked timeline, conditions register and decisions |
 
-Open the finished reports without running anything:
-[proof/pinecrest/report.html](proof/pinecrest/report.html) and
-[proof/farmdale/report.html](proof/farmdale/report.html). See
-[proof/README.md](proof/README.md) for what was redacted.
+Open the finished reports without running anything at
+[dineshsai05.github.io/solari-cookbook](https://dineshsai05.github.io/solari-cookbook/),
+or from the tracked copies in [proof/](proof/README.md), which also explains
+what was redacted.
 
 ## Why this needs Solari
 
