@@ -1,4 +1,6 @@
-// Usage: node --import tsx scripts/host-on-solari.ts [--stop] [--status]
+// Usage: node --import tsx scripts/host-on-solari.ts [--stop] [--status] [--publish-redirect]
+// --publish-redirect also rewrites try.html on the gh-pages branch of the
+// enclosing repository so the short link keeps pointing at the new URL.
 // Hosts the web demo inside a Solari sandbox and exposes it on a public
 // *.preview.getsolari.com URL. The sandbox runs this application's server,
 // which in turn creates its own browser, sandbox and desktop sessions per run.
@@ -47,6 +49,7 @@ try {
   if (!healthy) { const log = await sandbox.files.readText('/app/server.log').catch(() => ''); throw new Error('Server did not come up:\n' + log.slice(-1500)); }
   await writeFile(state, JSON.stringify({ sandboxId: sandbox.id, url, createdAt: new Date().toISOString(), expiresAt: sandbox.expiresAt }, null, 2));
   console.log('\nLIVE:', url, '\n\nKeep this process running. Ctrl-C leaves the sandbox up until', sandbox.expiresAt, '; --stop kills it.');
+  if (process.argv.includes('--publish-redirect')) await publishRedirect(url).catch(e => console.error('redirect not published:', e instanceof Error ? e.message.slice(0, 200) : e));
   process.on('SIGINT', () => { console.log('\nleaving the sandbox running; use --stop to end it'); sandbox.close(); process.exit(0); });
   while (true) {
     await new Promise(r => setTimeout(r, 180_000));
@@ -56,4 +59,21 @@ try {
 } catch (error) {
   console.error(error instanceof Error ? error.message.split(process.env.SOLARI_API_KEY!).join('[REDACTED]') : error);
   await sandbox.kill().catch(() => undefined); sandbox.close(); process.exit(1);
+}
+
+async function publishRedirect(url: string) {
+  const git = async (...args: string[]) => (await promisify(execFile)('git', args, { cwd: root })).stdout.trim();
+  const repo = await git('rev-parse', '--show-toplevel');
+  const wt = await mkdtemp(join(tmpdir(), 'permit-pilot-pages-'));
+  const g = async (...args: string[]) => (await promisify(execFile)('git', args, { cwd: repo })).stdout.trim();
+  await g('worktree', 'add', '--force', wt, 'gh-pages');
+  try {
+    const escaped = url.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    await writeFile(join(wt, 'try.html'), `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>PermitPilot</title><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0;url=${escaped}"><script>location.replace(${JSON.stringify(url)});</script></head><body><p>Opening the PermitPilot demo… <a href="${escaped}">Continue</a></p></body></html>\n`);
+    const gw = async (...args: string[]) => (await promisify(execFile)('git', args, { cwd: wt })).stdout.trim();
+    await gw('add', 'try.html');
+    await gw('-c', 'user.name=dineshsai05', '-c', 'user.email=dineshsai050106@gmail.com', 'commit', '-q', '-m', 'Point the live demo redirect at the current host');
+    await gw('push', '-q', 'fork', 'gh-pages');
+    console.log('redirect published: https://dineshsai05.github.io/solari-cookbook/try');
+  } finally { await g('worktree', 'remove', '--force', wt).catch(() => undefined); }
 }
