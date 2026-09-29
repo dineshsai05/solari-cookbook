@@ -19,10 +19,13 @@ Three real public cases are wired in, two of them on the same portal adapter:
 | `npm run demo:atherton` | Permit BP26-00421, Town of Atherton, California (eTRAKiT) | An open permit under review: live status monitoring and change detection on a portal that hides notes and attachments |
 | `npm run demo:farmdale` | Farmdale Apartments, Woodburn, Oregon (design review) | Long public documents turned into an evidence-linked timeline, conditions register and decisions |
 
-Open the finished reports without running anything at
-[dineshsai05.github.io/solari-cookbook](https://dineshsai05.github.io/solari-cookbook/),
-or from the tracked copies in [proof/](proof/README.md), which also explains
-what was redacted.
+**Try it on any permit** at
+[dineshsai05.github.io/solari-cookbook/try](https://dineshsai05.github.io/solari-cookbook/try):
+a hosted copy of this application running inside a Solari sandbox. Pick the
+portal, type a permit number, and the report arrives in about two minutes.
+Finished example reports are at
+[dineshsai05.github.io/solari-cookbook](https://dineshsai05.github.io/solari-cookbook/)
+and in [proof/](proof/README.md), which also explains what was redacted.
 
 ![Walkthrough: search, permit info, reviews, reviewer comment, desktop tracker](proof/pinecrest/walkthrough.gif)
 
@@ -114,6 +117,34 @@ AIML_MODEL=openai/gpt-4.1-mini-2025-04-14
 `npm start -- --doctor` reports which names are configured without printing
 values. There is no automatic model fallback.
 
+## Web demo
+
+```bash
+npm run serve                  # http://localhost:8080, one job at a time
+npm run host                   # same server inside a Solari sandbox on a public preview URL
+npm run host -- --status       # is it still up
+npm run host -- --stop         # end the sandbox
+```
+
+The form takes a portal and a permit number and runs one CLI job per request
+with the same guards as the command line, plus a per-address rate limit and a
+queue of eight. Any `https://` eTRAKiT origin can be entered; unverified
+deployments are labelled as such in the report. Unpinned permits select their
+own attachments: every applicant response, the newest drawings, and the VOID
+revision each superseded, at most six files and 40 extracted pages.
+`PERMITPILOT_WEB_DESKTOP=1` adds the desktop step to web runs;
+`PERMITPILOT_CONTACT` prints a feedback address on the form.
+
+`npm run host` ships the working tree (never `.env`, runs or proof) to a
+`base` sandbox, writes the credentials into the sandbox's own `.env`, installs,
+starts the server and prints a `*.preview.getsolari.com` URL. The URL carries a
+one-time token that sets an hour-long cookie, so links inside the app work.
+Solari ends the sandbox after about five hours on this account whatever idle
+window is requested, so the script stays in the foreground with a keep-alive
+and is simply run again to re-host. Hosting the app on the same
+infrastructure it drives is deliberate: the sandbox that serves the form
+creates its own browser, sandbox and desktop sessions per request.
+
 ## Run the portal demos
 
 ```bash
@@ -122,6 +153,8 @@ npm run demo:pinecrest -- --replay 2025-03-25 --desktop
 npm run demo:atherton                          # open permit, no notes published: monitoring only
 npm run demo:pinecrest -- --no-model           # browser and sandbox only
 node --import tsx src/portal-cli.ts --case <name>   # any case file under cases/
+node --import tsx src/portal-cli.ts --portal pinecrest --permit BL2024-0001      # any permit on a known portal
+node --import tsx src/portal-cli.ts --portal https://city-trk.aspgov.com --permit X # any eTRAKiT origin
 ```
 
 A case file pins the portal origin, the permit number, the expected site
@@ -179,7 +212,7 @@ npm run fixtures && python3 -m venv .venv && .venv/bin/python -m pip install -r 
 .venv/bin/python -m unittest discover -s python -p 'test_*.py' -v
 ```
 
-26 TypeScript tests cover the portal parser, dropdown label matching,
+28 TypeScript tests cover the portal parser, dropdown label matching, automatic attachment selection, dynamic case resolution,
 attachment key hints, snapshot diffing, replay filtering, latest-run
 selection, the tracker CSV, checklist coverage and citation rules, HTML
 escaping, the Farmdale evidence validator, the deck checklist, and mocked AIML
@@ -207,11 +240,13 @@ form round-trips and overflow rejection. No test makes a network call.
 cases/            pinned case manifests and review notes
 src/portal-*.ts   eTRAKiT adapter, snapshot diff and replay, latest-run lookup, checklist validation, report
 src/desktop-tracker.ts  tracker CSV and the Solari Desktop step
+src/server.ts     web demo: form, job queue, report serving
+src/portal-cases.ts  pinned case files and dynamic portal/permit requests
 src/case-*.ts     Farmdale document review
 src/passages.ts   passage slicing and citation resolution shared by both
 src/sandbox-python.ts  sandbox bootstrap with pinned pypdfium2
 python/           fixed extraction tools that run inside the sandbox
-scripts/          fixtures, proof bundling, Farmdale corrections
+scripts/          fixtures, proof bundling, Farmdale corrections, Solari hosting, walkthrough GIF
 proof/            sanitized evidence from live runs
 tests/            node:test suites
 ```
