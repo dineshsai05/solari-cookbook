@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PermitPilot pilot</title>
-<meta name="description" content="Try PermitPilot on one of your own permits: send a permit number, get back a report the next day. Public records only, nothing installed, nothing submitted.">
+<meta name="description" content="Try PermitPilot on one of your own permits: send a permit number, get back a report the same day. Public records only, nothing installed, nothing submitted.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root{--bg:#f4f5f0;--ink:#20312e;--muted:#52645e;--rule:#d7dfd8;--card:#ffffff;--accent:#197967;--accent-ink:#0f5a4c;--warn:#fff1cc;color-scheme:light}
@@ -24,7 +24,7 @@ ul{margin:0;padding-left:20px}li{margin:4px 0}dl{display:grid;grid-template-colu
 <img class="gif" src="pinecrest/walkthrough.gif" alt="Walkthrough: search form, permit record, reviews tab, reviewer comment page, and the tracker spreadsheet opened on a desktop">
 <section style="display:grid;gap:14px"><h2>How the pilot works</h2><div class="steps">
 <div class="step"><div><b>Email one permit number.</b> Any permit on the Village of Pinecrest or Town of Atherton portals works today, and most other CentralSquare eTRAKiT cities can be added in a day. Public records only, so an active or closed permit is fine, yours or one you are watching for a client.</div></div>
-<div class="step"><div><b>Get a report the next business day.</b> A private link: overall status separated from review history, review cycles, verbatim reviewer comments, the comment-to-response checklist, attachments, and a tracker spreadsheet you can drop into your own.</div></div>
+<div class="step"><div><b>Get a report the same day, usually within a few hours.</b> A private link: overall status separated from review history, review cycles, verbatim reviewer comments, the comment-to-response checklist, attachments, and a tracker spreadsheet you can drop into your own.</div></div>
 <div class="step"><div><b>Tell me if it is right.</b> Ten minutes on a call, or two sentences by email. What did it get wrong, what would you actually use, what does your current process look like. That is the whole price.</div></div>
 </div></section>
 <section style="display:grid;gap:14px"><h2>Send a permit number to</h2><div class="email"><span id="addr">himashanthi21@gmail.com</span><button id="copy" type="button">Copy address</button></div><p class="muted">Subject line "PermitPilot pilot" helps me find it. Include the city and the permit number; the site address is optional. No account, no install, no key to buy.</p></section>
@@ -35,7 +35,7 @@ ul{margin:0;padding-left:20px}li{margin:4px 0}dl{display:grid;grid-template-colu
 </div></section>
 <section style="display:grid;gap:14px"><h2>What it will not do</h2><ul><li>It never logs in, submits, pays, or edits anything. The only form it fills is the public search box.</li><li>It does not read drawings. Revisions are downloaded and hashed, not interpreted.</li><li>Applicant responses are shown as assertions, never as proof a comment was resolved. The portal's own status rows are the record.</li><li>Every quote is checked against the page it came from. That proves traceability, not that a summary is right, which is why I want your read on it.</li></ul></section>
 <section class="notice"><p><b>Who is behind this.</b> Dinesh, building PermitPilot on Solari's cloud browser, sandbox and desktop infrastructure as an entry to the Solari challenge. The code is public at <a href="https://github.com/dineshsai05/solari-cookbook/tree/permit-pilot/applications/permit-pilot">github.com/dineshsai05/solari-cookbook</a>. Your permit number and email are used for the pilot only and are not published.</p></section>
-<dl><dt>Portals today</dt><dd>Village of Pinecrest, FL · Town of Atherton, CA · other eTRAKiT cities on request</dd><dt>Turnaround</dt><dd>Next business day</dd><dt>Cost</dt><dd>Your feedback</dd></dl>
+<dl><dt>Portals today</dt><dd>Village of Pinecrest, FL · Town of Atherton, CA · other eTRAKiT cities on request</dd><dt>Turnaround</dt><dd>Same day, usually within a few hours</dd><dt>Cost</dt><dd>Your feedback</dd></dl>
 </main>
 <script>
 document.getElementById('copy').addEventListener('click',async()=>{const b=document.getElementById('copy');const t=document.getElementById('addr').textContent;try{await navigator.clipboard.writeText(t);b.textContent='Copied';}catch{const r=document.createRange();r.selectNodeContents(document.getElementById('addr'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Select and copy';}setTimeout(()=>{b.textContent='Copy address';},2000);});
