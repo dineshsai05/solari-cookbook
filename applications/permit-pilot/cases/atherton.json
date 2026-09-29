@@ -1,0 +1,11 @@
+{
+  "name": "Atherton permit BP26-00421",
+  "authority": "Town of Atherton, California (eTRAKiT public portal)",
+  "origin": "https://athr-trk.aspgov.com",
+  "searchPath": "/eTRAKiT/Search/permit.aspx",
+  "permitNumber": "BP26-00421",
+  "expectedSiteAddress": "361 FLETCHER DR",
+  "qualifiedAt": "2026-09-29",
+  "notes": "Open grading and drainage permit applied June 1, 2026. Atherton's public portal shows review rows, reviewers, statuses and dates but hides reviewer notes and attachments, so this case exercises live status monitoring and change detection; there is nothing for the checklist to link.",
+  "attachments": []
+}

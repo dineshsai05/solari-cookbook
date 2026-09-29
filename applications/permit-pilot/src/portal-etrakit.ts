@@ -4,13 +4,19 @@ import type { BrowserSession } from '@solarisdk/browser';
 import { digest } from './sources.js';
 import { parseAttachmentKey, SnapshotSchema, type Attachment, type Review, type Snapshot } from './portal-snapshot.js';
 
-// Read-only adapter for CentralSquare eTRAKiT as deployed by the Village of
-// Pinecrest. It searches, reads, and downloads. It never logs in, never posts a
-// form other than the public search, and never touches the applicant record.
+// Read-only adapter for CentralSquare eTRAKiT public portals (verified against
+// the Village of Pinecrest, FL and the Town of Atherton, CA deployments). It
+// searches, reads, and downloads. It never logs in, never posts a form other
+// than the public search, and never touches the applicant record.
 
 export interface PortalCase {
-  name: string; authority: string; origin: string; searchPath: string; permitNumber: string; expectedSiteAddress: string; qualifiedAt: string;
+  name: string; authority: string; origin: string; searchPath: string; permitNumber: string; expectedSiteAddress: string; qualifiedAt: string; notes?: string;
   attachments: { id: string; match: string; role: string; sha256: string; pages: number }[];
+}
+/** Deployments label the search dropdowns differently ("PERMIT NUMBER", "Permit No", "PERMIT_NO"). Picks the option to use or returns null. */
+export function pickOption(options: { label: string; value: string }[], kind: 'permitNumber' | 'equals') {
+  const test = kind === 'permitNumber' ? /permit[\s_]*(number|no\b|num\b|#)/i : /^equals$/i;
+  return options.find(o => test.test(o.label.trim())) ?? (kind === 'permitNumber' ? options.find(o => /permit/i.test(o.label)) ?? null : null);
 }
 export type Event = (name: string, detail?: unknown) => Promise<void>;
 type Page = Awaited<ReturnType<BrowserSession['newPage']>>;
@@ -39,9 +45,16 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
   const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   if (!response?.ok() || !isPortalUrl(c.origin, page.url())) throw new Error('Portal search page unavailable');
   // The public search form: this is the only form the adapter submits.
-  await page.locator('#cplMain_ddSearchBy').selectOption({ label: 'PERMIT NUMBER' });
-  await page.locator('#cplMain_ddSearchOper').selectOption({ label: 'Equals' });
+  const options = (selector: string) => page.locator(`${selector} option`).evaluateAll(os => os.map(o => ({ label: o.textContent || '', value: (o as HTMLOptionElement).value })));
+  const by = pickOption(await options('#cplMain_ddSearchBy'), 'permitNumber');
+  if (!by) throw new Error('Portal search form has no permit-number option');
+  await page.locator('#cplMain_ddSearchBy').selectOption({ value: by.value });
+  await page.waitForTimeout(1500); // some deployments post back when the field changes
+  const oper = pickOption(await options('#cplMain_ddSearchOper'), 'equals');
+  if (!oper) throw new Error('Portal search form has no Equals operator');
+  await page.locator('#cplMain_ddSearchOper').selectOption({ value: oper.value });
   await page.locator('#cplMain_txtSearchString').fill(c.permitNumber);
+  await page.screenshot({ path: join(out, 'portal-search-form.png'), fullPage: false });
   await page.locator('#ctl00_cplMain_btnSearch').click();
   const hit = page.getByText(c.permitNumber, { exact: true });
   await hit.first().waitFor({ state: 'visible', timeout: 45_000 });
@@ -78,7 +91,7 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
   if (new Set(attachments.map(a => a.key)).size !== attachments.length) throw new Error('Duplicate attachment keys on the permit page');
   await event('portal_attachments_listed', { count: attachments.length, void: attachments.filter(a => a.void).length });
 
-  await page.locator('.rtsTxt', { hasText: /^Reviews$/ }).first().click();
+  await page.locator('.rtsTxt', { hasText: /^Reviews\s*(\(\d+\))?$/ }).first().click();
   const grid = page.locator('table[id$="rgReviewInfo_ctl00"] tbody tr');
   await grid.first().waitFor({ state: 'visible', timeout: 30_000 });
   await page.screenshot({ path: join(out, 'portal-reviews.png'), fullPage: true });
@@ -92,6 +105,7 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
   // Each review's detail is a standalone public page that the More Info popup loads in an iframe. Opening it directly in the same context is equivalent and avoids fragile popup handling.
   const detail = await page.context().newPage();
   detail.setDefaultTimeout(30_000);
+  let detailShot = false;
   try {
     for (const row of rows) {
       if (!row.recordId || !row.group || row.activity !== c.permitNumber || row.cells.length < 6) throw new Error('Review row did not expose a record ID for this permit');
@@ -100,10 +114,12 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
       if (!r?.ok() || !isPortalUrl(c.origin, detail.url())) throw new Error('Review detail page unavailable');
       const text = await detail.locator('body').innerText();
       const parsed = parseReviewDetail(text);
-      if (!parsed.reviewer || !parsed.type) throw new Error('Review detail page did not contain reviewer fields');
+      if (!parsed.type) throw new Error('Review detail page did not contain review fields');
+      if (parsed.notes && !detailShot) { detailShot = true; await detail.screenshot({ path: join(out, 'portal-review-detail.png'), fullPage: true }); }
       const [type, reviewer, status, submitted, completed, dueDate] = row.cells.map(collapse);
       reviews.push({ recordId: row.recordId, type: type!, reviewer: reviewer!, status: status!, submitted: submitted || null, completed: completed || null, dueDate: dueDate || null, group: parsed.group, remarks: parsed.remarks, notes: parsed.notes, detailUrl, sha256: digest(parsed.notes) });
     }
+    if (!detailShot) await detail.screenshot({ path: join(out, 'portal-review-detail.png'), fullPage: true });
   } finally { await detail.close(); }
   if (!reviews.length) throw new Error('No review rows found');
   await event('portal_reviews_captured', { count: reviews.length, withNotes: reviews.filter(r => r.notes).length });

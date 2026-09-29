@@ -1,6 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseReviewDetail, isPortalUrl, collapse, type PortalCase } from '../src/portal-pinecrest.js';
+import { parseReviewDetail, isPortalUrl, collapse, pickOption, type PortalCase } from '../src/portal-etrakit.js';
+import { trackerCsv } from '../src/desktop-tracker.js';
+import { latestRun } from '../src/portal-runs.js';
+import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { diffSnapshots, disciplineChain, parseAttachmentKey, replaySnapshot, toIso, SnapshotSchema, type Snapshot } from '../src/portal-snapshot.js';
 import { validatePortalAnalysis, reviewDocuments, attachmentDocId, reviewDocId } from '../src/portal-analysis.js';
 import { passagesFor, resolveEvidence } from '../src/passages.js';
@@ -89,4 +94,39 @@ test('portal report escapes untrusted text and labels replay, VOID and no-change
   assert.ok(html.includes('Portal content changed')); assert.ok(html.includes('outcomes across cycles'));
   const quiet = portalReport(c, base, { model: null, usage: null, capturedAt: base.capturedAt, diff: diffSnapshots(base, base), comparedWith: 'earlier', replay: null, analysis: null, documents: [], sessionId: null });
   assert.ok(quiet.includes('No change:'));
+});
+
+test('search dropdown labels are matched across deployments', () => {
+  const opt = (labels: string[]) => labels.map((label, i) => ({ label, value: String(i) }));
+  assert.equal(pickOption(opt(['PERMIT NUMBER', 'ADDRESS']), 'permitNumber')?.value, '0');
+  assert.equal(pickOption(opt(['ADDRESS', 'PARCEL NUMBER', 'Permit No']), 'permitNumber')?.value, '2');
+  assert.equal(pickOption(opt(['PERMIT_NO', 'SITE_ADDR']), 'permitNumber')?.value, '0');
+  assert.equal(pickOption(opt(['Permit Type', 'Owner Name']), 'permitNumber')?.value, '0', 'falls back to any permit option');
+  assert.equal(pickOption(opt(['ADDRESS']), 'permitNumber'), null);
+  assert.equal(pickOption(opt(['Begins With', 'Contains', 'Equals']), 'equals')?.value, '2');
+  assert.equal(pickOption(opt(['Contains']), 'equals'), null);
+});
+test('tracker CSV has one row per review, quotes commas, and carries checklist status', () => {
+  const noisy = structuredClone(base); noisy.reviews[0]!.type = 'BUILDING, "MAIN"';
+  const csv = trackerCsv(noisy, { items: [{ reviewRecordId: 'EM:2', commentSummary: '', responseStatus: 'applicant_asserted', responseSummary: 'x', drawingReference: null, evidence: [] }], questions: [] });
+  const lines = csv.trim().split('\r\n');
+  assert.equal(lines.length, 4);
+  assert.equal(lines[0], 'permit,overall_status,review,reviewer,outcome,submitted,completed,due,has_notes,response_in_packet,captured_at');
+  assert.ok(lines[1]!.startsWith('BL2024-1706,FINALED,"BUILDING, ""MAIN""",A. REVIEWER,DENIED,12/17/2024,1/8/2025,1/8/2025,yes,,'));
+  assert.ok(lines[2]!.includes(',yes,applicant_asserted,'));
+  assert.ok(lines[3]!.includes(',no,,'));
+});
+test('the latest completed run of the same case is chosen for comparison', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'permit-pilot-'));
+  const make = async (name: string, status: string, withSnapshot = true) => { await mkdir(join(dir, name)); await writeFile(join(dir, name, 'manifest.json'), JSON.stringify({ status })); if (withSnapshot) await writeFile(join(dir, name, 'snapshot.json'), '{}'); };
+  await make('100-pinecrest-live', 'completed'); await make('300-pinecrest-live', 'failed'); await make('250-pinecrest-live', 'completed'); await make('400-pinecrest-live', 'completed', false); await make('500-atherton-live', 'completed');
+  assert.equal(await latestRun(dir, 'pinecrest'), join(dir, '250-pinecrest-live'));
+  assert.equal(await latestRun(dir, 'atherton'), join(dir, '500-atherton-live'));
+  assert.equal(await latestRun(dir, 'nowhere'), null);
+  assert.equal(await latestRun(join(dir, 'missing'), 'pinecrest'), null);
+});
+test('report explains a skipped checklist, an empty attachment list, and shows the desktop step', () => {
+  const empty = structuredClone(base); empty.attachments = []; empty.reviews = empty.reviews.map(r => ({ ...r, notes: '' }));
+  const html = portalReport({ ...c, notes: 'Notes hidden by the town.' }, empty, { model: null, usage: null, capturedAt: empty.capturedAt, diff: null, comparedWith: null, replay: null, analysis: null, documents: [], sessionId: null, checklistSkipped: 'nothing to link', desktop: { app: 'libreoffice', screenshot: 'desktop-tracker.png' }, replaySaved: true });
+  assert.ok(html.includes('nothing to link')); assert.ok(html.includes('No attachments are published')); assert.ok(html.includes('LibreOffice Calc')); assert.ok(html.includes('desktop-tracker.png')); assert.ok(html.includes('replay.ndjson')); assert.ok(html.includes('Notes hidden by the town.'));
 });

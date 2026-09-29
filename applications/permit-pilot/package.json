@@ -12,10 +12,12 @@
     "test": "node --import tsx --test --test-isolation=none tests/*.test.ts",
     "fixtures": "node --import tsx scripts/make-fixtures.ts",
     "demo:farmdale": "node --import tsx src/case-cli.ts",
-    "demo:pinecrest": "node --import tsx src/portal-cli.ts"
+    "demo:pinecrest": "node --import tsx src/portal-cli.ts --case pinecrest",
+    "demo:atherton": "node --import tsx src/portal-cli.ts --case atherton"
   },
   "dependencies": {
     "@solarisdk/browser": "0.1.5",
+    "@solarisdk/desktop": "0.1.3",
     "@solarisdk/sandbox": "0.1.4",
     "dotenv": "18.0.4",
     "openai": "7.23.0",

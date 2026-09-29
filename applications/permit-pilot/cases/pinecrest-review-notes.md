@@ -20,3 +20,8 @@ these are its known soft spots:
   They are separate reviews, not proof that a specific comment was satisfied.
 - The attachment timestamp hint is parsed from the portal key and corroborated
   by the three review submission dates; it is not a portal-labelled upload date.
+
+Desktop step, verified September 29, 2026: the tracker CSV was written to a
+Solari Desktop, opened in LibreOffice Calc, and screenshotted with all 17 rows
+visible. The first attempt was partly covered by LibreOffice's Tip of the Day
+dialog; the step now dismisses it before the screenshot.
