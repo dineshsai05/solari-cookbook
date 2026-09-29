@@ -14,12 +14,12 @@ test('HTTP admission, script syntax, artifact permissions and reports survive re
   const stop = async () => { if (!child || child.exitCode !== null) return; const exited = new Promise<void>(r => child!.once('exit', () => r())); child.kill('SIGTERM'); await exited; };
   try {
     await mkdir(join(dir, 'src')); await cp(join(root, 'cases'), join(dir, 'cases'), { recursive: true });
-    for (const f of ['server.ts', 'web-state.ts', 'portal-cases.ts']) await copyFile(join(root, 'src', f), join(dir, 'src', f));
+    for (const f of ['server.ts', 'web-state.ts', 'portal-cases.ts', 'admin-ui.ts']) await copyFile(join(root, 'src', f), join(dir, 'src', f));
     await symlink(join(root, 'node_modules'), join(dir, 'node_modules'));
     await writeFile(join(dir, 'package.json'), '{"type":"module"}');
     await writeFile(join(dir, 'src', 'portal-cli.ts'), `import {writeFile} from 'node:fs/promises';import {join} from 'node:path';const out=process.argv[process.argv.indexOf('--out')+1];await writeFile(join(out,'report.html'),'Test report');await writeFile(join(out,'events.jsonl'),JSON.stringify({name:'portal_report_generated',at:new Date().toISOString()})+'\\n');await writeFile(join(out,'replay.ndjson'),'{}');await writeFile(join(out,'model-response.json'),'private');`);
     const start = () => new Promise<string>((resolve, reject) => {
-      child = spawn(process.execPath, ['--import', 'tsx', 'src/server.ts'], { cwd: dir, env: { ...process.env, PORT: '0', SOLARI_API_KEY: 'fake', AIML_API_KEY: 'fake', AIML_MODEL: 'fake', PERMITPILOT_DATA_DIR: join(dir, 'data'), PERMITPILOT_DAILY_LIMIT: '3' }, stdio: ['ignore', 'pipe', 'pipe'] });
+      child = spawn(process.execPath, ['--import', 'tsx', 'src/server.ts'], { cwd: dir, env: { ...process.env, DATABASE_URL: '', PORT: '0', SOLARI_API_KEY: 'fake', AIML_API_KEY: 'fake', AIML_MODEL: 'fake', PERMITPILOT_DATA_DIR: join(dir, 'data'), PERMITPILOT_DAILY_LIMIT: '3' }, stdio: ['ignore', 'pipe', 'pipe'] });
       let output = ''; child.stdout!.on('data', b => { output += b; const match = /http:\/\/localhost:(\d+)/.exec(output); if (match) resolve(`http://127.0.0.1:${match[1]}`); });
       child.stderr!.on('data', b => { output += b; }); child.once('error', reject); child.once('exit', code => { if (code) reject(new Error(output)); });
     });

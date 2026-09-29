@@ -4,9 +4,11 @@ import { mkdir, readFile, writeFile, stat, open } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, resolve, extname } from 'node:path';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { config } from 'dotenv';
-import { restoreJobs, saveJob, RunBudget, type Job } from './web-state.js';
+import { restoreJobs, saveJob as saveLocalJob, RunBudget, type Job } from './web-state.js';
+import { adminPage } from './admin-ui.js';
+import type { PostgresStore } from './postgres-store.js';
 import { listPortals, PERMIT_NUMBER, slugify } from './portal-cases.js';
 
 // A small web front end for the portal adapter. A visitor picks a portal,
@@ -23,12 +25,30 @@ const MAX_QUEUE = 8, PER_IP_PER_HOUR = 5, JOB_TIMEOUT_MS = 10 * 60_000;
 const DESKTOP = process.env.PERMITPILOT_WEB_DESKTOP === '1';
 const CONTACT = process.env.PERMITPILOT_CONTACT || '';
 
-const jobs = await restoreJobs(WEB); const queue: Job[] = []; let running: { job: Job; child: ChildProcess } | null = null;
+let running: { job: Job; child: ChildProcess } | null = null;
+const ADMIN_KEY = process.env.PERMITPILOT_ADMIN_KEY ?? '';
+let database: PostgresStore | null = null;
+if (process.env.DATABASE_URL) {
+  if (ADMIN_KEY.length < 32) throw new Error('PostgreSQL mode requires PERMITPILOT_ADMIN_KEY with at least 32 characters');
+  const { PostgresStore } = await import('./postgres-store.js');
+  database = new PostgresStore(process.env.DATABASE_URL, () => { running?.child.kill('SIGKILL'); process.exit(1); });
+  await database.open();
+}
+if (database) setInterval(() => { void database!.ping().catch(() => { running?.child.kill('SIGKILL'); process.exit(1); }); }, 15_000).unref();
+const jobs = database ? await database.restore(WEB) : await restoreJobs(WEB);
+const queue: Job[] = [...jobs.values()].filter(j => j.status === 'queued');
+async function saveJob(job: Job) { if (database) await database.save(job); await saveLocalJob(job); }
+function authorized(req: IncomingMessage) {
+  if (!ADMIN_KEY) return false;
+  const actual = Buffer.from(req.headers.authorization ?? ''), expected = Buffer.from('Bearer ' + ADMIN_KEY);
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
 const dailyLimit = Number(process.env.PERMITPILOT_DAILY_LIMIT || 10);
 if (!Number.isInteger(dailyLimit) || dailyLimit < 1 || dailyLimit > 100) throw new Error('Daily run limit must be between 1 and 100');
-const budget = new RunBudget(join(WEB, 'budget.json'), dailyLimit, PER_IP_PER_HOUR); await budget.load();
+const budget = new RunBudget(join(WEB, 'budget.json'), dailyLimit, PER_IP_PER_HOUR); if (!database) await budget.load();
 let admission = Promise.resolve();
 let starting = false;
+let stopping = false;
 async function exclusive<T>(fn: () => Promise<T>): Promise<T> {
   const previous = admission; let release!: () => void;
   admission = new Promise<void>(resolve => { release = resolve; });
@@ -91,10 +111,11 @@ async function readJobDir(job: Job) {
   return events;
 }
 async function pump() {
-  if (starting || running || !queue.length) return;
+  if (stopping || starting || running || !queue.length) return;
   starting = true;
   const job = queue.shift()!; job.status = 'running'; job.startedAt = new Date().toISOString();
-  try { await saveJob(job); } catch { starting = false; job.status = 'failed'; job.error = 'Could not persist run state.'; void pump(); return; }
+  try { await mkdir(job.dir, { recursive: true }); await saveJob(job); } catch { starting = false; job.status = 'failed'; job.error = 'Could not persist run state.'; void pump(); return; }
+  if (stopping) { job.status = 'queued'; job.startedAt = null; await saveJob(job); starting = false; return; }
   const args = ['--import', 'tsx', 'src/portal-cli.ts', '--portal', job.portal, '--permit', job.permit, '--out', job.dir, ...(DESKTOP ? ['--desktop'] : [])];
   const log = open(join(job.dir, 'server-log.txt'), 'w');
   const child = spawn(process.execPath, args, { cwd: root, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -125,19 +146,48 @@ const server = createServer(async (req, res) => {
     const path = url.pathname.replace(/\/+$/, '') || '/';
     const ip = req.socket.remoteAddress ?? 'unknown'; // Never trust caller-supplied forwarding headers.
     if (req.method === 'GET' && path === '/') return html(res, 200, formPage(portals));
-    if (req.method === 'GET' && path === '/healthz') return json(res, 200, { ok: true, live: LIVE, dailyLimit, running: running ? 1 : 0, queued: queue.length });
+    if (req.method === 'GET' && path === '/healthz') {
+      try { if (database) await database.ping(); } catch { return json(res, 503, { ok: false, live: false }); }
+      return json(res, 200, { ok: true, live: LIVE, dailyLimit, running: running ? 1 : 0, queued: queue.length, storage: database ? 'postgresql' : 'filesystem' });
+    }
+    if (path === '/workspace' && req.method === 'GET' && database) return html(res, 200, adminPage(STYLE));
+    if (path.startsWith('/api/admin/')) {
+      if (!database) return json(res, 404, { error: 'Workspace requires PostgreSQL.' });
+      if (!authorized(req)) return json(res, 401, { error: 'A valid workspace access key is required.' });
+      if (path === '/api/admin/jobs' && req.method === 'GET') return json(res, 200, await database.listJobs());
+      const tasks = /^\/api\/admin\/jobs\/([a-f0-9]{12})\/tasks$/.exec(path);
+      const task = /^\/api\/admin\/tasks\/([a-f0-9]{24})(\/audit)?$/.exec(path);
+      if (tasks) {
+        if (!jobs.has(tasks[1]!)) return json(res, 404, { error: 'Capture not found' });
+        if (req.method === 'GET') return json(res, 200, await database.listTasks(tasks[1]!));
+        if (req.method === 'POST') { const { validateTask } = await import('./postgres-store.js'); return json(res, 201, await database.createTask(tasks[1]!, validateTask(await body(req)))); }
+      }
+      if (task && task[2] && req.method === 'GET') return json(res, 200, await database.audit(task[1]!));
+      if (task && !task[2] && req.method === 'PATCH') {
+        const value = await body(req); if (!Number.isInteger(value.version) || value.version < 1) return json(res, 400, { error: 'Task revision is required' });
+        const { validateTask } = await import('./postgres-store.js');
+        try { return json(res, 200, await database.updateTask(task[1]!, validateTask(value), value.version)); }
+        catch (error) { if ((error as Error).message.includes('changed since')) return json(res, 409, { error: (error as Error).message }); throw error; }
+      }
+      return json(res, 404, { error: 'Workspace route not found' });
+    }
     if (req.method === 'POST' && path === '/api/jobs') {
-      if (!LIVE) return json(res, 503, { error: 'Live captures are paused. Explore the recorded example instead.' });
+      if (stopping || !LIVE) return json(res, 503, { error: 'Live captures are paused. Explore the recorded example instead.' });
       // Read and validate before taking the admission lock. Recheck limits inside it.
       const r = parseJobRequest(await body(req), portals);
       return await exclusive(async () => {
       if (queue.length >= MAX_QUEUE) return json(res, 503, { error: 'The queue is full right now. Try again in a few minutes.' });
-      try { await budget.reserve(ip); } catch (error) { return json(res, 429, { error: (error as Error).message }); }
+      try { if (!database) await budget.reserve(ip); } catch (error) { return json(res, 429, { error: (error as Error).message }); }
       const portalLabel = portals.find(p => p.slug === r.portal)?.authority ?? new URL(r.portal).hostname;
       const id = randomBytes(6).toString('hex');
       const slug = /^https:/.test(r.portal) ? `${slugify(new URL(r.portal).hostname)}-${slugify(r.permit)}` : (r.permit === portals.find(p => p.slug === r.portal)!.permitNumber ? r.portal : `${r.portal}-${slugify(r.permit)}`);
       const job: Job = { id, portal: r.portal, portalLabel, permit: r.permit, email: r.email, createdAt: new Date().toISOString(), startedAt: null, finishedAt: null, status: 'queued', dir: join(WEB, `${Date.now()}-${slug}-live`), error: null };
-      await mkdir(job.dir, { recursive: true }); await saveJob(job);
+      await mkdir(job.dir, { recursive: true });
+      if (database) {
+        try { await database.enqueue(job, ip, dailyLimit, PER_IP_PER_HOUR, MAX_QUEUE); }
+        catch (error) { const msg = (error as Error).message; return json(res, /allowance|queue is full/.test(msg) ? 429 : 503, { error: /allowance|queue is full/.test(msg) ? msg : 'Capture storage is unavailable. Try again later.' }); }
+      }
+      await saveJob(job);
       jobs.set(id, job); queue.push(job); pump();
       return json(res, 202, { id });
       });
@@ -169,6 +219,14 @@ const server = createServer(async (req, res) => {
   }
 });
 server.requestTimeout = 15_000; server.headersTimeout = 10_000;
-server.listen(PORT, () => console.log(`PermitPilot web demo on http://localhost:${(server.address() as import('node:net').AddressInfo).port} (desktop step ${DESKTOP ? 'on' : 'off'})`));
+server.listen(PORT, () => { console.log(`PermitPilot web demo on http://localhost:${(server.address() as import('node:net').AddressInfo).port} (desktop step ${DESKTOP ? 'on' : 'off'})`); if (LIVE) void pump(); });
 
-process.on('SIGTERM', () => { server.close(); running?.child.kill('SIGTERM'); setTimeout(() => process.exit(0), 2000).unref(); });
+function shutdown() {
+  if (stopping) return; stopping = true;
+  server.close(); running?.child.kill('SIGTERM');
+  setTimeout(() => {
+    running?.child.kill('SIGKILL');
+    if (database) void database.close().finally(() => process.exit(0)); else process.exit(0);
+  }, 2000).unref();
+}
+process.on('SIGTERM', shutdown); process.on('SIGINT', shutdown);

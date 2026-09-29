@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: permitpilot
+      POSTGRES_USER: permitpilot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U permitpilot -d permitpilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  app:
+    build: .
+    restart: unless-stopped
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${PERMITPILOT_PORT:-8080}:8080"
+    environment:
+      DATABASE_URL: postgresql://permitpilot:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/permitpilot
+      PERMITPILOT_ADMIN_KEY: ${PERMITPILOT_ADMIN_KEY:?Set an operator access key of at least 32 characters}
+      SOLARI_API_KEY: ${SOLARI_API_KEY:-}
+      AIML_API_KEY: ${AIML_API_KEY:-}
+      AIML_MODEL: ${AIML_MODEL:-}
+      PERMITPILOT_LIVE: ${PERMITPILOT_LIVE:-0}
+      PERMITPILOT_DAILY_LIMIT: ${PERMITPILOT_DAILY_LIMIT:-10}
+      PERMITPILOT_CONTACT: ${PERMITPILOT_CONTACT:-}
+      PERMITPILOT_DATA_DIR: /data
+    volumes:
+      - reports:/data
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  postgres-data:
+  reports:

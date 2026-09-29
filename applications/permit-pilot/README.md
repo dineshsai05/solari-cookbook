@@ -316,15 +316,14 @@ confidential material through this public trial.
 Solari's current sandbox host is a temporary trial (approximately five hours), not
 production web hosting. Jobs and the budget are local to that host and are lost when
 its filesystem is destroyed. Do not claim always-on monitoring or permanent report
-storage. This project does not yet implement PostgreSQL or editable team tasks.
+storage. PostgreSQL mode and an authenticated operator task workspace are available for durable deployments (see below). The public Solari trial remains in filesystem mode.
 
 For a durable single-instance deployment, the Dockerfile runs as a non-root user and
 exposes port 8080. Build it locally, provide the existing API environment variables as
 secrets, and mount a persistent volume at `/data`. Put it behind an HTTPS reverse proxy.
 Only one server process may use a data directory: admission and filesystem locking
 are process-local. Back up that volume; restoring an older backup can restore an older
-budget too. A multi-instance service requires a shared transactional database and
-queue before horizontal scaling. No new hosting subscription is provisioned by these
+budget too. PostgreSQL mode persists jobs, admission and task edits transactionally, but deliberately grants one runner a session advisory lock. Horizontal scaling is not supported. No new hosting subscription is provisioned by these
 scripts. Do not republish/rehost automatically to bypass run limits.
 
 ### Regression checks
@@ -335,3 +334,45 @@ artifact restrictions and browser-script syntax without calling paid APIs. Unit 
 cover replay milestones, same-name attachment replacements, bounded revision pairs
 and disclosure of unread pages. `scripts/refresh-proof-reports.ts` re-renders historical
 proof with current disclosures without pretending to recapture the portal.
+
+### PostgreSQL and the private workspace
+
+Set `DATABASE_URL` and a random `PERMITPILOT_ADMIN_KEY` of at least 32 characters to
+use PostgreSQL mode. Start the app and open `/workspace`. The workspace key stays in
+browser-tab memory; it is never embedded in a page, URL or browser storage. Reload
+or lock the workspace to clear it. Use HTTPS on a real deployment. This is a single
+operator workspace, not multi-tenant SaaS or individual employee authentication.
+
+The workspace lists the last 200 captures, links source reports, and lets the
+operator create manual follow-up tasks with an owner, due date, notes and state.
+Tasks do not change portal status. Every create/edit is audited. Revision numbers
+reject stale edits with HTTP 409. Only the operator key can list or change tasks;
+public report links do not expose task notes or the capture email address.
+
+PostgreSQL holds capture metadata, the durable queue, daily admission counts and
+tasks. Report files remain in the separate persistent `/data` volume. Both volumes
+must survive deployment. A process restart resumes queued captures; an interrupted
+running capture is marked failed rather than automatically spending more credits.
+The runner holds a database session lock, refuses a second active runner and stops
+its local worker if the lock connection is lost. Admission is serialized in a
+transaction and committed before execution. Do not use transaction-pooling proxies
+for the session-lock connection; use a direct PostgreSQL connection.
+
+`compose.yaml` provides a non-root app and PostgreSQL 17 with persistent volumes,
+health checks and restart policies. Its HTTP port binds only to localhost for an
+HTTPS reverse proxy. Set `POSTGRES_PASSWORD` to a random URL-safe value and set the
+operator key in your ignored environment file. Live calls default off in Compose;
+set `PERMITPILOT_LIVE=1` only with valid API credentials and a deliberate run limit.
+Use `docker compose --env-file <private-env-file> up -d --build`. Keep the environment
+file outside Git. Back up PostgreSQL and the report volume together. Do not use
+`docker compose down -v` on a real deployment; it removes persisted data.
+
+Existing filesystem-only runs are not automatically imported into PostgreSQL.
+Keep their original host/data directory available when migrating. The database
+schema currently uses additive initial table creation; future breaking schema
+changes will require versioned migrations.
+
+Database integration tests run only with `PERMITPILOT_TEST_DATABASE_URL` pointing
+at a **disposable test database**: the test resets PermitPilot tables there. They
+never use `DATABASE_URL`. The suite checks budget concurrency, duplicate-runner
+rejection, queue recovery, task persistence, authorization and conflicting edits.
