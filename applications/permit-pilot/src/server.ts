@@ -1,7 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdir, readFile, writeFile, stat, open } from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
+import { mkdir, readFile, writeFile, stat, open, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join, resolve, extname } from 'node:path';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
@@ -105,9 +104,29 @@ if(j.status==='failed'){const f=document.getElementById('fail');f.textContent=j.
 tick();</script></body></html>`;
 }
 
+const ARCHIVE_FILES = /^(report\.html|snapshot\.json|documents\.json|analysis\.json|diff\.json|replay\.(json|ndjson)|manifest\.json|events\.jsonl|tracker\.csv|portal-[a-z-]+\.png|desktop-tracker\.png)$/;
+async function readArtifact(job: Job, name: string) {
+  try { return await readFile(join(job.dir, name)); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    const saved = database ? await database.artifact(job.id, name) : null;
+    if (saved) return saved;
+    throw error;
+  }
+}
+async function archiveReport(job: Job) {
+  if (!database) return;
+  const files = new Map<string, Buffer>();
+  for (const name of await readdir(job.dir)) if (ARCHIVE_FILES.test(name)) {
+    if ((await stat(join(job.dir, name))).size > 25 * 1024 * 1024) throw new Error('Report file exceeds storage limit');
+    files.set(name, await readFile(join(job.dir, name)));
+  }
+  if (!files.has('report.html')) throw new Error('Report file missing');
+  await database.archive(job.id, files);
+}
 async function readJobDir(job: Job) {
   let events: { name: string; at: string }[] = [];
-  try { events = (await readFile(join(job.dir, 'events.jsonl'), 'utf8')).trim().split('\n').filter(Boolean).flatMap(l => { try { const e = JSON.parse(l); return e.name in STEP_LABELS ? [{ name: e.name, at: String(e.at ?? '') }] : []; } catch { return []; } }); } catch { /* not started */ }
+  try { events = ((await readArtifact(job, 'events.jsonl')).toString('utf8')).trim().split('\n').filter(Boolean).flatMap(l => { try { const e = JSON.parse(l); return e.name in STEP_LABELS ? [{ name: e.name, at: String(e.at ?? '') }] : []; } catch { return []; } }); } catch { /* not started */ }
   return events;
 }
 async function pump() {
@@ -124,9 +143,13 @@ async function pump() {
   void log.then(h => { child.stdout?.on('data', d => { void h.write(d).catch(() => undefined); }); child.stderr?.on('data', d => { void h.write(d).catch(() => undefined); }); child.on('close', () => { void h.close().catch(() => undefined); }); }).catch(() => undefined);
   const timer = setTimeout(() => { job.error = 'Run exceeded ten minutes and was stopped.'; child.kill('SIGKILL'); }, JOB_TIMEOUT_MS);
   child.on('close', async code => {
-    clearTimeout(timer); running = null; job.finishedAt = new Date().toISOString();
+    clearTimeout(timer); job.finishedAt = new Date().toISOString();
     if (code === 0) job.status = 'completed'; else { job.status = 'failed'; if (!job.error) { try { const tail = (await readFile(join(job.dir, 'server-log.txt'), 'utf8')).trim().split('\n').slice(-1)[0] ?? ''; job.error = 'The capture could not complete. The portal or an analysis service may be unavailable. Try again later. No portal changes were made.'; } catch { job.error = 'The run stopped.'; } } }
-    await saveJob(job).catch(() => undefined); pump();
+    if (job.status === 'completed') {
+      try { await archiveReport(job); }
+      catch { job.status = 'failed'; job.error = 'Capture finished but durable report storage failed. Contact the operator; this run was not automatically retried.'; }
+    }
+    await saveJob(job).catch(() => undefined); running = null; pump();
   });
 }
 function json(res: ServerResponse, status: number, body: unknown) { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); }
@@ -200,17 +223,17 @@ const server = createServer(async (req, res) => {
       if (kind === 'jobs') return html(res, 200, jobPage(job));
       const name = file || 'report.html';
       if (name === 'snapshot.json' || name === 'replay.json') {
-        try { const snapshot = JSON.parse(await readFile(join(job.dir, name), 'utf8')); snapshot.sessionId = null; return json(res, 200, snapshot); }
+        try { const snapshot = JSON.parse((await readArtifact(job, name)).toString('utf8')); snapshot.sessionId = null; return json(res, 200, snapshot); }
         catch { return json(res, 404, { error: 'Snapshot not ready' }); }
       }
       if (name === 'manifest.json') {
-        try { const m = JSON.parse(await readFile(join(job.dir, name), 'utf8')); return json(res, 200, { mode: m.mode, status: m.status, permitNumber: m.permitNumber, startedAt: m.startedAt, provider: m.provider, model: m.model, replaySaved: m.replaySaved }); }
+        try { const m = JSON.parse((await readArtifact(job, name)).toString('utf8')); return json(res, 200, { mode: m.mode, status: m.status, permitNumber: m.permitNumber, startedAt: m.startedAt, provider: m.provider, model: m.model, replaySaved: m.replaySaved }); }
         catch { return json(res, 404, { error: 'Manifest not ready' }); }
       }
       if (!/^[a-z0-9._-]+$/i.test(name) || name.includes('..') || name === 'job.json' || name === 'server-log.txt' || name.startsWith('attachments')) return html(res, 404, 'Not found');
       const type = TYPES[extname(name).toLowerCase()]; const full = resolve(job.dir, name);
       if (!type || !/^(report\.html|snapshot\.json|documents\.json|analysis\.json|diff\.json|replay\.(json|ndjson)|tracker\.csv|portal-[a-z-]+\.png|desktop-tracker\.png)$/.test(name) || !full.startsWith(job.dir)) return html(res, 404, 'Not found');
-      try { const s = await stat(full); res.writeHead(200, { 'content-type': type, 'content-length': s.size, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }); createReadStream(full).pipe(res); return; } catch { return html(res, 404, 'Not found'); }
+      try { const data = await readArtifact(job, name); res.writeHead(200, { 'content-type': type, 'content-length': data.length, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }); res.end(data); return; } catch { return html(res, 404, 'Not found'); }
     }
     html(res, 404, `<!doctype html><html><head><meta charset="utf-8"><title>PermitPilot</title>${STYLE}</head><body><main><h1>Not found</h1><p><a href="/">Home</a></p></main></body></html>`);
   } catch (error) {

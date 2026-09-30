@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { gzipSync, gunzipSync } from 'node:zlib';
 import { createHash, randomBytes } from 'node:crypto';
 import { basename, join } from 'node:path';
 import type { Job } from './web-state.js';
@@ -23,6 +24,10 @@ export class PostgresStore {
         created_at timestamptz NOT NULL DEFAULT now(), ip_hash text NOT NULL
       );
       CREATE INDEX IF NOT EXISTS pp_jobs_created ON pp_jobs(created_at);
+      CREATE TABLE IF NOT EXISTS pp_artifacts (
+        job_id text NOT NULL REFERENCES pp_jobs(id), name text NOT NULL, content bytea NOT NULL,
+        PRIMARY KEY(job_id,name)
+      );
       CREATE TABLE IF NOT EXISTS pp_tasks (
         id text PRIMARY KEY, job_id text NOT NULL REFERENCES pp_jobs(id), title text NOT NULL,
         owner text NOT NULL DEFAULT '', due_date date, status text NOT NULL DEFAULT 'open' CHECK(status IN ('open','in_progress','done')),
@@ -72,6 +77,31 @@ export class PostgresStore {
     this.assertHealthy();
     const result = await this.pool.query('UPDATE pp_jobs SET payload=$2,status=$3 WHERE id=$1', [job.id, job, job.status]);
     if (!result.rowCount) throw new Error('Cannot update an unknown capture');
+  }
+  async archive(jobId: string, files: Map<string, Buffer>) {
+    this.assertHealthy();
+    const packed = [...files].map(([name, data]) => {
+      if (data.length > 25 * 1024 * 1024) throw new Error('Report file exceeds storage limit');
+      return [name, gzipSync(data)] as const;
+    });
+    const size = packed.reduce((n, [, data]) => n + data.length, 0);
+    if (size > 20 * 1024 * 1024) throw new Error('Report exceeds storage limit');
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('SELECT pg_advisory_xact_lock(714026093)');
+      const usage = await client.query('SELECT COALESCE(sum(octet_length(content)),0)::bigint AS bytes FROM pp_artifacts WHERE job_id <> $1', [jobId]);
+      if (Number(usage.rows[0].bytes) + size > 100 * 1024 * 1024) throw new Error('Report storage allowance reached');
+      await client.query('DELETE FROM pp_artifacts WHERE job_id=$1', [jobId]);
+      for (const [name, data] of packed) await client.query('INSERT INTO pp_artifacts(job_id,name,content) VALUES($1,$2,$3)', [jobId,name,data]);
+      await client.query('COMMIT');
+    } catch (error) { await client.query('ROLLBACK'); throw error; }
+    finally { client.release(); }
+  }
+  async artifact(jobId: string, name: string): Promise<Buffer | null> {
+    this.assertHealthy();
+    const result = await this.pool.query('SELECT content FROM pp_artifacts WHERE job_id=$1 AND name=$2', [jobId,name]);
+    return result.rowCount ? gunzipSync(result.rows[0].content, { maxOutputLength: 25 * 1024 * 1024 }) : null;
   }
   async listJobs() {
     this.assertHealthy();

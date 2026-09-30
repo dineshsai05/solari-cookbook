@@ -15,7 +15,7 @@ test('task input rejects bad dates, oversized fields and unknown states', () => 
 test('PostgreSQL persists queue, enforces global admission and detects concurrent task edits', { skip: !url }, async () => {
   // This test requires an explicitly designated disposable database, never DATABASE_URL.
   const clean = new pg.Client({ connectionString: url }); await clean.connect();
-  await clean.query('DROP TABLE IF EXISTS pp_task_audit, pp_tasks, pp_jobs CASCADE'); await clean.end();
+  await clean.query('DROP TABLE IF EXISTS pp_artifacts, pp_task_audit, pp_tasks, pp_jobs CASCADE'); await clean.end();
   const first = new PostgresStore(url!); await first.open();
   try {
     const competitor = new PostgresStore(url!); await assert.rejects(competitor.open(), /Another PermitPilot runner/);
@@ -29,10 +29,18 @@ test('PostgreSQL persists queue, enforces global admission and detects concurren
     const edit = await first.updateTask(t.id, {...input,status:'in_progress'}, 1); assert.equal(edit.version,2);
     await assert.rejects(first.updateTask(t.id,{...input,status:'done'},1), /changed since/);
     assert.equal((await first.audit(t.id)).length,2);
+    await first.archive(captured.id, new Map([
+      ['report.html', Buffer.from('<h1>Persisted report</h1>')],
+      ['snapshot.json', Buffer.from(JSON.stringify({sessionId:'private-session',permit:'test'}))],
+      ['events.jsonl', Buffer.from(JSON.stringify({name:'portal_report_generated',at:'2026-09-30T00:00:00Z'})+'\n')],
+    ]));
+    await assert.rejects(first.archive(captured.id, new Map([['report.html', Buffer.alloc(26*1024*1024)]])), /storage limit/);
     await first.close();
     const restarted = new PostgresStore(url!); await restarted.open();
     try {
       const restored = await restarted.restore('/new-data');
+      assert.equal((await restarted.artifact(captured.id,'report.html'))!.toString(),'<h1>Persisted report</h1>');
+      assert.equal(await restarted.artifact(captured.id,'server-log.txt'),null);
       assert.equal(restored.get(captured.id)!.status,'failed');
       assert.equal(restored.get(secondJob.id)!.status,'queued');
       assert.ok(restored.get(secondJob.id)!.dir.startsWith('/new-data/'));
@@ -64,6 +72,14 @@ test('private workspace HTTP API requires a key and returns conflicts for stale 
     assert.equal((await fetch(base+'/api/admin/jobs',{headers:{authorization:'Bearer wrong'}})).status,401);
     const auth={authorization:'Bearer '+key,'content-type':'application/json'};
     const jobs=await fetch(base+'/api/admin/jobs',{headers:auth}).then(r=>r.json()) as {id:string}[];assert.equal(jobs.length,2);
+    // No report files exist in this fresh data directory: reads must use PostgreSQL.
+    const reports=await Promise.all(jobs.map(j=>fetch(base+'/r/'+j.id+'/report.html')));
+    const reportIndex=reports.findIndex(r=>r.status===200);assert.notEqual(reportIndex,-1);
+    assert.equal(await reports[reportIndex]!.text(),'<h1>Persisted report</h1>');
+    const savedId=jobs[reportIndex]!.id;
+    const snapshot=await fetch(base+'/r/'+savedId+'/snapshot.json').then(r=>r.json()) as {sessionId:unknown};assert.equal(snapshot.sessionId,null);
+    assert.equal((await fetch(base+'/r/'+savedId+'/events.jsonl')).status,404);
+    const activity=await fetch(base+'/api/jobs/'+savedId).then(r=>r.json()) as {events:unknown[]};assert.equal(activity.events.length,1);
     const html=await fetch(base+'/workspace').then(r=>r.text());assert.ok(!html.includes(key));for(const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new Script(m[1]!);
     const data={title:'Check the source response',owner:'Coordinator',dueDate:null,status:'open',notes:'A manual follow-up, not a portal finding.'};
     const created=await fetch(base+'/api/admin/jobs/'+jobs[0]!.id+'/tasks',{method:'POST',headers:auth,body:JSON.stringify(data)});assert.equal(created.status,201);const task=await created.json() as {id:string;version:number};

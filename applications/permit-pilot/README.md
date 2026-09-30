@@ -350,8 +350,7 @@ reject stale edits with HTTP 409. Only the operator key can list or change tasks
 public report links do not expose task notes or the capture email address.
 
 PostgreSQL holds capture metadata, the durable queue, daily admission counts and
-tasks. Report files remain in the separate persistent `/data` volume. Both volumes
-must survive deployment. A process restart resumes queued captures; an interrupted
+tasks. New completed reports are also archived in PostgreSQL, including screenshots and the activity trail. Local `/data` files are a cache for those reports. Existing runs created before database archiving still need their original report volume. A process restart resumes queued captures; an interrupted
 running capture is marked failed rather than automatically spending more credits.
 The runner holds a database session lock, refuses a second active runner and stops
 its local worker if the lock connection is lost. Admission is serialized in a
@@ -376,3 +375,37 @@ Database integration tests run only with `PERMITPILOT_TEST_DATABASE_URL` pointin
 at a **disposable test database**: the test resets PermitPilot tables there. They
 never use `DATABASE_URL`. The suite checks budget concurrency, duplicate-runner
 rejection, queue recovery, task persistence, authorization and conflicting edits.
+
+
+### Free Render + Neon deployment
+
+Use a **Free Web Service**, the `permit-pilot` branch and root directory
+`applications/permit-pilot`. Select the Docker runtime, Dockerfile `./Dockerfile`,
+and Docker context `.`. Leave Docker Command empty. Set the health check to
+`/healthz`. No paid disk, background worker or Render Postgres service is needed.
+Use only one instance. A rolling deployment may briefly wait for the old instance
+to release its database runner lock; do not enable multiple replicas.
+
+Copy these values from the private local `.env` into Render environment settings:
+`DATABASE_URL` (Neon direct connection with SSL, pooling disabled),
+`PERMITPILOT_ADMIN_KEY`, `SOLARI_API_KEY`, `AIML_API_KEY`, `AIML_MODEL`.
+Set `PERMITPILOT_LIVE=0` until the deployed health and private workspace are checked;
+then set it to `1` for the public trial. Set `PERMITPILOT_DAILY_LIMIT=10`,
+`PERMITPILOT_WEB_DESKTOP=0` and `PERMITPILOT_DATA_DIR=/data`.
+Never upload the `.env` file to Git or paste its contents in an issue.
+
+Free hosting is not always-on: Render sleeps after inactivity. Neon free compute
+and storage are quota-limited too. Our single-runner connection heartbeat consumes
+Neon compute while the web process is awake. Live browser and AI work still uses
+Solari/AIML credits. Do not use keep-alive pings to prevent free-service sleep.
+
+The archive is bounded at 25 MiB per uncompressed file, 20 MiB compressed per run,
+and 100 MiB compressed across all reports. This is an application payload ceiling,
+not a guarantee of total PostgreSQL disk size; indexes, WAL and other tables consume
+additional storage. Storage failures mark the run failed rather than claiming a
+permanent report exists. No old reports are deleted automatically. Private worker
+logs, job email and downloaded source attachments are excluded from the archive.
+The HTTP artifact allowlist and session-ID redaction apply after database recovery.
+
+After Render provides the HTTPS URL, update the landing page's live-host configuration
+and free-host cold-start messaging before announcing fresh captures as available.
