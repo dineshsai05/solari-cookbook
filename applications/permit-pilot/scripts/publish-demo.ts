@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-export async function publishDemo(live?: { url: string; expiresAt: string }) {
+export async function publishDemo(live?: { url: string; expiresAt: string | null }) {
   const run = async (cwd: string, ...args: string[]) => (await promisify(execFile)('git', args, { cwd })).stdout.trim();
   const repo = await run(root, 'rev-parse', '--show-toplevel');
   await run(repo, 'fetch', 'fork', 'gh-pages');
