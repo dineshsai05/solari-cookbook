@@ -1,0 +1,101 @@
+{
+  "mode": "live",
+  "project": "Deck demo - incomplete",
+  "status": "draft_requires_review",
+  "findings": [
+    {
+      "id": "site-drawing",
+      "title": "site drawing information",
+      "status": "missing",
+      "sourceId": "drawings",
+      "evidence": [],
+      "explanation": "No supporting drawing text was identified in the supplied plan files. Verify against the originals."
+    },
+    {
+      "id": "structural-drawing",
+      "title": "structural drawing information",
+      "status": "evidence_found",
+      "sourceId": "drawings",
+      "evidence": [
+        {
+          "documentId": "document-1",
+          "page": 1,
+          "quote": "Drawing type: structural"
+        }
+      ],
+      "explanation": "Supporting text was located; drawing content and adequacy still require human review."
+    },
+    {
+      "id": "elevation-drawing",
+      "title": "elevation drawing information",
+      "status": "evidence_found",
+      "sourceId": "drawings",
+      "evidence": [
+        {
+          "documentId": "document-1",
+          "page": 2,
+          "quote": "Drawing type: elevation"
+        }
+      ],
+      "explanation": "Supporting text was located; drawing content and adequacy still require human review."
+    },
+    {
+      "id": "address-consistency",
+      "title": "Project address consistency",
+      "status": "conflict",
+      "sourceId": null,
+      "explanation": "A document address differs from the project input. Formatting differences also require confirmation; values are not silently replaced.",
+      "evidence": [
+        {
+          "documentId": "document-1",
+          "page": 1,
+          "quote": "Project address: 123 Example Lane (fictional)"
+        },
+        {
+          "documentId": "document-1",
+          "page": 2,
+          "quote": "Project address: 321 Example Lane (fictional)"
+        }
+      ]
+    },
+    {
+      "id": "sheet-sizes",
+      "title": "Consistent plan sheet sizes",
+      "status": "conflict",
+      "sourceId": "files",
+      "evidence": [],
+      "explanation": "Observed plan page sizes in points: 612x792, 792x612."
+    },
+    {
+      "id": "combined-plans",
+      "title": "Single plan-set PDF",
+      "status": "evidence_found",
+      "sourceId": "files",
+      "evidence": [],
+      "explanation": "1 file(s) were declared as plans. The pipeline preserves original plan files; it does not silently merge or change drawings."
+    },
+    {
+      "id": "project-fields",
+      "title": "Core application inputs",
+      "status": "missing",
+      "sourceId": "application",
+      "evidence": [],
+      "explanation": "Missing: contractor license."
+    },
+    {
+      "id": "scope-review",
+      "title": "Site conditions and applicability",
+      "status": "needs_review",
+      "sourceId": "changes",
+      "evidence": [],
+      "explanation": "Confirm jurisdiction and narrow deck scope; review overlays, site conditions, ground disturbance, loads and applicable supplemental forms."
+    }
+  ],
+  "inputs": [
+    {
+      "id": "document-1",
+      "name": "plans.pdf",
+      "sha256": "c875b4030d607be1a10a3726804c9c4677d7f42c5a2e91c6baf728741eaade93"
+    }
+  ]
+}

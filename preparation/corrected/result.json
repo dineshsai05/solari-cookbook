@@ -1,0 +1,112 @@
+{
+  "mode": "local",
+  "project": "Deck demo - corrected",
+  "status": "draft_requires_review",
+  "findings": [
+    {
+      "id": "site-drawing",
+      "title": "site drawing information",
+      "status": "evidence_found",
+      "sourceId": "drawings",
+      "evidence": [
+        {
+          "documentId": "document-1",
+          "page": 1,
+          "quote": "Drawing type: site"
+        }
+      ],
+      "explanation": "Supporting text was located; drawing content and adequacy still require human review."
+    },
+    {
+      "id": "structural-drawing",
+      "title": "structural drawing information",
+      "status": "evidence_found",
+      "sourceId": "drawings",
+      "evidence": [
+        {
+          "documentId": "document-1",
+          "page": 2,
+          "quote": "Drawing type: structural"
+        }
+      ],
+      "explanation": "Supporting text was located; drawing content and adequacy still require human review."
+    },
+    {
+      "id": "elevation-drawing",
+      "title": "elevation drawing information",
+      "status": "evidence_found",
+      "sourceId": "drawings",
+      "evidence": [
+        {
+          "documentId": "document-1",
+          "page": 3,
+          "quote": "Drawing type: elevation"
+        }
+      ],
+      "explanation": "Supporting text was located; drawing content and adequacy still require human review."
+    },
+    {
+      "id": "address-consistency",
+      "title": "Project address consistency",
+      "status": "evidence_found",
+      "sourceId": null,
+      "explanation": "Checks only addresses extracted from readable text; it does not verify jurisdiction or ownership.",
+      "evidence": [
+        {
+          "documentId": "document-1",
+          "page": 1,
+          "quote": "Project address: 123 Example Lane (fictional)"
+        },
+        {
+          "documentId": "document-1",
+          "page": 2,
+          "quote": "Project address: 123 Example Lane (fictional)"
+        },
+        {
+          "documentId": "document-1",
+          "page": 3,
+          "quote": "Project address: 123 Example Lane (fictional)"
+        }
+      ]
+    },
+    {
+      "id": "sheet-sizes",
+      "title": "Consistent plan sheet sizes",
+      "status": "evidence_found",
+      "sourceId": "files",
+      "evidence": [],
+      "explanation": "Observed plan page sizes in points: 612x792."
+    },
+    {
+      "id": "combined-plans",
+      "title": "Single plan-set PDF",
+      "status": "evidence_found",
+      "sourceId": "files",
+      "evidence": [],
+      "explanation": "1 file(s) were declared as plans. The pipeline preserves original plan files; it does not silently merge or change drawings."
+    },
+    {
+      "id": "project-fields",
+      "title": "Core application inputs",
+      "status": "missing",
+      "sourceId": "application",
+      "evidence": [],
+      "explanation": "Missing: contractor license."
+    },
+    {
+      "id": "scope-review",
+      "title": "Site conditions and applicability",
+      "status": "needs_review",
+      "sourceId": "changes",
+      "evidence": [],
+      "explanation": "Confirm jurisdiction and narrow deck scope; review overlays, site conditions, ground disturbance, loads and applicable supplemental forms."
+    }
+  ],
+  "inputs": [
+    {
+      "id": "document-1",
+      "name": "plans.pdf",
+      "sha256": "63f875f02d09bcc31adb8c812b5e803d136d29c3999bd85ead35428ca731e7e2"
+    }
+  ]
+}
