@@ -22,20 +22,41 @@ const liveButton = document.getElementById('live-button');
 liveButton.addEventListener('click', e => { if (liveButton.getAttribute('aria-disabled') === 'true') e.preventDefault(); });
 async function checkLive() {
   const status = document.getElementById('live-status'), expiry = document.getElementById('live-expiry');
+  let renderUrl = null;
   try {
     const response = await fetch('live.json', { cache: 'no-store', signal: AbortSignal.timeout(8000) });
     if (!response.ok) throw new Error('No live host configured');
     const config = await response.json(); const url = new URL(config.url);
     const expires = Date.parse(config.expiresAt);
-    if (url.protocol !== 'https:' || !url.hostname.endsWith('.preview.getsolari.com') || !Number.isFinite(expires) || expires <= Date.now()) throw new Error('Trial host has expired');
+    const isRender = url.origin === 'https://permit-pilot-brs1.onrender.com' && !url.username && !url.password;
+    if (url.protocol !== 'https:' || (!isRender && (!url.hostname.endsWith('.preview.getsolari.com') || !Number.isFinite(expires) || expires <= Date.now()))) throw new Error('Trial host unavailable');
+    if (isRender) {
+      renderUrl = url;
+      status.textContent = 'Checking the live trial. The free server may need time to wake up…';
+      liveButton.href = url.href; liveButton.target = '_blank'; liveButton.rel = 'noopener';
+      liveButton.textContent = 'Open the trial server ↗'; liveButton.setAttribute('aria-disabled', 'false');
+    }
     const health = new URL(url); health.pathname = '/healthz';
-    const healthResponse = await fetch(health, { signal: AbortSignal.timeout(8000), credentials: 'omit' });
+    const healthResponse = await fetch(health, { signal: AbortSignal.timeout(isRender ? 60000 : 8000), credentials: 'omit' });
     if (!healthResponse.ok) throw new Error('Live host unavailable');
-    const state = await healthResponse.json(); if (!state.ok || !state.live) throw new Error('Live captures paused');
+    const state = await healthResponse.json(); if (!state.ok) throw new Error('Live host unavailable');
+    if (!state.live) {
+      status.textContent = 'The server is online; fresh captures are currently paused.';
+      liveButton.textContent = 'Explore the recorded example'; liveButton.href = '#explore'; liveButton.removeAttribute('target'); liveButton.setAttribute('aria-disabled', 'false');
+      expiry.textContent = 'The recorded report, walkthrough and downloads are available while captures are paused.';
+      return;
+    }
     status.textContent = 'Live trial available · Pinecrest and Atherton'; liveButton.textContent = 'Open the live trial ↗';
     liveButton.href = url.href; liveButton.target = '_blank'; liveButton.rel = 'noopener'; liveButton.setAttribute('aria-disabled', 'false');
-    expiry.textContent = 'Temporary trial host available until ' + new Date(expires).toLocaleString() + '. Download results before it expires. Up to ' + state.dailyLimit + ' runs per day across this host.';
+    expiry.textContent = isRender ? 'Free hosting sleeps when idle. The first visit may take about a minute to wake up. Up to ' + state.dailyLimit + ' captures per day across the service. Download important results.' : 'Temporary trial host available until ' + new Date(expires).toLocaleString() + '. Download results before it expires. Up to ' + state.dailyLimit + ' runs per day across this host.';
   } catch {
+    if (renderUrl) {
+      status.textContent = 'Live availability could not be confirmed. The free server may be waking up.';
+      liveButton.textContent = 'Open the trial server ↗'; liveButton.href = renderUrl.href;
+      liveButton.target = '_blank'; liveButton.rel = 'noopener'; liveButton.setAttribute('aria-disabled', 'false');
+      expiry.textContent = 'Allow about a minute for the server to wake up. The recorded example remains available below.';
+      return;
+    }
     status.textContent = 'The live trial is currently offline.'; liveButton.textContent = 'Explore the recorded example';
     liveButton.href = '#explore'; liveButton.removeAttribute('target'); liveButton.setAttribute('aria-disabled', 'false');
     expiry.textContent = 'The full example report, walkthrough and downloads remain available. Contact Dinesh using the feedback link to arrange a fresh capture.';
