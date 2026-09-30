@@ -93,7 +93,8 @@ async function main() {
     if (values.replay) { replay = replaySnapshot(snapshot, values.replay); await writeFile(join(out, 'replay.json'), JSON.stringify(replay, null, 2)); await event('replay_reconstructed', { asOf: values.replay, reviews: replay.reviews.length }); }
 
     let analysis: PortalAnalysisResult | null = null; let model: string | null = null; let usage: unknown = null; let checklistSkipped: string | null = null;
-    if (!values['no-model'] && documents.length === 0) { checklistSkipped = 'This portal publishes no reviewer notes or attachments for this permit, so there is nothing for the checklist to link.'; await event('checklist_skipped', { reason: checklistSkipped }); }
+    if (snapshot.reviewsUnavailable) { checklistSkipped = 'Structured review rows are not publicly available for this permit. Status and available attachments are captured, but comment-to-response matching cannot be established.'; await event('checklist_skipped', { reason: checklistSkipped }); }
+    else if (!values['no-model'] && documents.length === 0) { checklistSkipped = 'This portal publishes no reviewer notes or attachments for this permit, so there is nothing for the checklist to link.'; await event('checklist_skipped', { reason: checklistSkipped }); }
     else if (!values['no-model']) {
       const result = await analyzePortal(snapshot, documents, process.env.AIML_API_KEY!, process.env.AIML_MODEL!, r => writeFile(join(out, 'model-response.json'), JSON.stringify(r, null, 2)));
       analysis = result.analysis; model = result.model; usage = result.usage;

@@ -20,6 +20,7 @@ export const SnapshotSchema = z.object({
   version: z.literal(1), capturedAt: z.string(), permitNumber: z.string(), portalUrl: z.string().url(), sessionId: z.string().nullable(),
   permit: z.object({ type: text, subtype: text, description: text, status: text, siteAddress: text, appliedDate: text, approvedDate: text, issuedDate: text, finaledDate: text, expirationDate: text }),
   reviews: z.array(ReviewSchema).max(200),
+  reviewsUnavailable: z.boolean().optional(),
   attachments: z.array(AttachmentSchema).max(500),
   replay: z.object({ asOf: z.string(), from: z.string() }).nullable(),
 });
@@ -60,6 +61,7 @@ export function diffSnapshots(previous: Snapshot, next: Snapshot): SnapshotDiff 
   for (const field of Object.keys(next.permit) as (keyof Snapshot['permit'])[]) {
     if (previous.permit[field] !== next.permit[field]) diff.permit.push({ field, from: previous.permit[field], to: next.permit[field] });
   }
+  if (Boolean(previous.reviewsUnavailable) !== Boolean(next.reviewsUnavailable)) diff.permit.push({ field: 'publicReviewAccess', from: previous.reviewsUnavailable ? 'unavailable' : 'available', to: next.reviewsUnavailable ? 'unavailable' : 'available' });
   const compare = <T extends Record<string, unknown>>(a: T[], b: T[], id: keyof T, fields: (keyof T)[]) => {
     const before = new Map(a.map(x => [String(x[id]), x])); const after = new Map(b.map(x => [String(x[id]), x]));
     const added = [...after.keys()].filter(k => !before.has(k)); const removed = [...before.keys()].filter(k => !after.has(k));

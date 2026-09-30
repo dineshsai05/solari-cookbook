@@ -1,4 +1,34 @@
-# PermitPilot: watch a building permit through a government portal
+# PermitPilot: prepare the application and track the next step
+
+PermitPilot's use case is **permit operations**: start with a project and its
+documents, gather the requirements, prepare the application package, coordinate
+missing evidence, and track applications and requests after submission.
+
+**[Try the complete coordinator demo](https://dineshsai05.github.io/solari-cookbook/workflow.html)**
+or **[inspect the preparation pipeline](https://dineshsai05.github.io/solari-cookbook/workflow.html#proof)**.
+
+The public demonstration has three distinct parts:
+
+- **Before submission:** a recorded Solari Browser + Sandbox + AIML run checks a
+  synthetic Portland deck packet against official guidance and fills an unsigned
+  official application. A locally verified revised packet shows how the findings
+  change. Both retain unresolved items; neither is submission-ready.
+- **Coordinator workflow:** Farmdale's real 45-unit project and historical
+  source documents become an editable requirements register, owner/target-date
+  tracker, handoff export and internal evidence-request draft. Demo edits stay
+  in the visitor's browser. They are not the actual owner's work or a shared
+  production workspace. The selected conditions do not cover the whole permit
+  package, and building-permit issuance is not established.
+- **After submission:** the live portal component below captures existing public
+  permits, compares consecutive snapshots and connects published review comments
+  to available response text. It is one component of the larger workflow.
+
+Automatic jurisdiction determination, arbitrary plan uploads in the public UI,
+government submission, signatures, payments and always-on monitoring are not
+implemented. The private PostgreSQL workspace supports persistent operator tasks;
+the public coordinator demo is a separate local demonstration.
+
+## Live portal component
 
 Give it a permit number. A Solari Browser searches the city's public permit
 portal, opens the record, reads every departmental review and the reviewer's
@@ -18,6 +48,14 @@ Three real public cases are wired in, two of them on the same portal adapter:
 | `npm run demo:pinecrest` | Permit BL2024-1706, Village of Pinecrest, Florida (eTRAKiT) | Reviewer comments, revision downloads with VOID labels, historical replay, AI-linked checklist |
 | `npm run demo:atherton` | Permit BP26-00421, Town of Atherton, California (eTRAKiT) | An open permit under review: live status monitoring and change detection on a portal that hides notes and attachments |
 | `npm run demo:farmdale` | Farmdale Apartments, Woodburn, Oregon (design review) | Long public documents turned into an evidence-linked timeline, conditions register and decisions |
+
+Two more eTRAKiT deployments are configured as status-only portals:
+`cases/san-pablo.json` (City of San Pablo, CA) and `cases/lakewood.json`
+(City of Lakewood, CO). Both were captured live on September 30, 2026; neither
+publishes review rows or attachments for its verified example, so the run
+records status and milestones, marks review access as unavailable, and skips
+the checklist with an explanation. City of Pasco, WA was probed the same day
+and answers the Solari browser with HTTP 403, so it is not listed.
 
 **Try it on any permit** at
 [dineshsai05.github.io/solari-cookbook/try](https://dineshsai05.github.io/solari-cookbook/try):
@@ -212,7 +250,7 @@ npm run fixtures && python3 -m venv .venv && .venv/bin/python -m pip install -r 
 .venv/bin/python -m unittest discover -s python -p 'test_*.py' -v
 ```
 
-28 TypeScript tests cover the portal parser, dropdown label matching, automatic attachment selection, dynamic case resolution,
+43 TypeScript tests (two of them PostgreSQL integration tests that skip without a disposable test database) cover the portal parser, dropdown label matching, automatic attachment selection, dynamic case resolution, limited-access portals, the web server with a fake worker, the coordinator workflow state module,
 attachment key hints, snapshot diffing, replay filtering, latest-run
 selection, the tracker CSV, checklist coverage and citation rules, HTML
 escaping, the Farmdale evidence validator, the deck checklist, and mocked AIML

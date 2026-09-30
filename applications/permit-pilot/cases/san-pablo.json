@@ -1,0 +1,13 @@
+{
+  "name": "City of San Pablo, California permit B2601-0001",
+  "authority": "City of San Pablo, California (public status and available documents)",
+  "origin": "https://etrakit.sanpabloca.gov",
+  "searchPath": "/eTRAKiT/Search/permit.aspx",
+  "permitNumber": "B2601-0001",
+  "expectedSiteAddress": "1901 Church Ln",
+  "qualifiedAt": "2026-09-30",
+  "notes": "Public permit status only. Review details and attachments are not exposed for the verified example.",
+  "attachments": [],
+  "autoAttachments": true,
+  "allowUnavailableReviews": true
+}

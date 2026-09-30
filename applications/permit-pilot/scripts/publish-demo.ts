@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, writeFile, mkdtemp, copyFile, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdtemp, copyFile, cp, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -13,7 +13,8 @@ export async function publishDemo(live?: { url: string; expiresAt: string | null
   const wt = await mkdtemp(join(tmpdir(), 'permit-pilot-pages-'));
   await run(repo, 'worktree', 'add', '--detach', wt, 'fork/gh-pages');
   try {
-    for (const file of ['try.html', 'demo.css', 'demo.js', '404.html']) await copyFile(join(root, 'public', file), join(wt, file));
+    for (const file of ['try.html', 'demo.css', 'demo.js', '404.html', 'workflow.html', 'workflow.css', 'workflow.js', 'workflow-state.js', 'workflow-data.json']) await copyFile(join(root, 'public', file), join(wt, file));
+    for (const dir of ['preparation', 'farmdale']) await cp(join(root, 'proof', dir), join(wt, dir), { recursive: true });
     // Also accept the trailing-dot URL the original demo was shared with.
     await rm(join(wt, 'try.'), { force: true });
     if (live) await writeFile(join(wt, 'live.json'), JSON.stringify(live, null, 2));
@@ -21,10 +22,10 @@ export async function publishDemo(live?: { url: string; expiresAt: string | null
     for (const slug of ['pinecrest', 'atherton']) await copyFile(join(root, 'proof', slug, 'report.html'), join(wt, slug, 'report.html'));
     await copyFile(join(root, 'proof', 'pinecrest', 'replay.json'), join(wt, 'pinecrest', 'replay.json'));
     const g = (...args: string[]) => run(wt, ...args);
-    await g('add', '-A', '--', 'try.html', 'demo.css', 'demo.js', '404.html', 'live.json', 'pinecrest/report.html', 'atherton/report.html', 'pinecrest/replay.json');
+    await g('add', '-A', '--', 'try.html', 'demo.css', 'demo.js', '404.html', 'live.json', 'workflow.html', 'workflow.css', 'workflow.js', 'workflow-state.js', 'workflow-data.json', 'preparation', 'farmdale', 'pinecrest/report.html', 'atherton/report.html', 'pinecrest/replay.json');
     await g('add', '-u');
     if (await g('diff', '--cached', '--name-only')) {
-      await g('-c', 'user.name=dineshsai05', '-c', 'user.email=dineshsai050106@gmail.com', 'commit', '-m', 'Publish guided PermitPilot demo with explicit live availability');
+      await g('-c', 'user.name=dineshsai05', '-c', 'user.email=dineshsai050106@gmail.com', 'commit', '-m', 'Publish permit preparation and coordination workflow demo');
       await g('push', 'fork', 'HEAD:gh-pages');
     }
     console.log('Demo published: https://dineshsai05.github.io/solari-cookbook/try.html');

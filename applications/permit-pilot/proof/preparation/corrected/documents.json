@@ -1,0 +1,33 @@
+[
+  {
+    "id": "document-1",
+    "name": "plans.pdf",
+    "role": "plans",
+    "sha256": "63f875f02d09bcc31adb8c812b5e803d136d29c3999bd85ead35428ca731e7e2",
+    "encrypted": false,
+    "error": null,
+    "pages": [
+      {
+        "number": 1,
+        "width": 612,
+        "height": 792,
+        "text": "SYNTHETIC TEST FIXTURE - NOT A CONSTRUCTION DRAWING\nDrawing type: site\nProject address: 123 Example Lane (fictional)\nProject: Demonstration attached uncovered wood deck\nIllustrative deck footprint: 12 feet by 16 feet; area 192 square feet.\nIllustrative walking surface: 48 inches above adjacent grade.\nThese labels test text extraction and evidence linkage only.\nNo structural dimensions, calculations or construction approval are provided.\nIllustration only - not to scale\n",
+        "textTruncated": false
+      },
+      {
+        "number": 2,
+        "width": 612,
+        "height": 792,
+        "text": "SYNTHETIC TEST FIXTURE - NOT A CONSTRUCTION DRAWING\nDrawing type: structural\nProject address: 123 Example Lane (fictional)\nProject: Demonstration attached uncovered wood deck\nIllustrative deck footprint: 12 feet by 16 feet; area 192 square feet.\nIllustrative walking surface: 48 inches above adjacent grade.\nThese labels test text extraction and evidence linkage only.\nNo structural dimensions, calculations or construction approval are provided.\nIllustration only - not to scale\n",
+        "textTruncated": false
+      },
+      {
+        "number": 3,
+        "width": 612,
+        "height": 792,
+        "text": "SYNTHETIC TEST FIXTURE - NOT A CONSTRUCTION DRAWING\nDrawing type: elevation\nProject address: 123 Example Lane (fictional)\nProject: Demonstration attached uncovered wood deck\nIllustrative deck footprint: 12 feet by 16 feet; area 192 square feet.\nIllustrative walking surface: 48 inches above adjacent grade.\nThese labels test text extraction and evidence linkage only.\nNo structural dimensions, calculations or construction approval are provided.\nIllustration only - not to scale\n",
+        "textTruncated": false
+      }
+    ]
+  }
+]

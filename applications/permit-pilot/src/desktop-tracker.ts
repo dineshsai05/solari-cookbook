@@ -16,6 +16,7 @@ export function trackerCsv(snapshot: Snapshot, analysis: PortalAnalysisResult | 
     const item = analysis?.items.find(i => i.reviewRecordId === r.recordId);
     return [snapshot.permitNumber, snapshot.permit.status, r.type, r.reviewer, r.status, r.submitted, r.completed, r.dueDate, r.notes.trim() ? 'yes' : 'no', item ? item.responseStatus : '', snapshot.capturedAt];
   });
+  if (!rows.length) rows.push([snapshot.permitNumber, snapshot.permit.status, snapshot.reviewsUnavailable ? 'Public review details unavailable' : 'No review rows captured', '', '', '', '', '', 'unknown', '', snapshot.capturedAt]);
   return [header, ...rows].map(row => row.map(cell).join(',')).join('\r\n') + '\r\n';
 }
 

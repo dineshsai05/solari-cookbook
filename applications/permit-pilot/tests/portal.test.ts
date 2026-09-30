@@ -116,6 +116,16 @@ test('tracker CSV has one row per review, quotes commas, and carries checklist s
   assert.ok(lines[2]!.includes(',yes,applicant_asserted,'));
   assert.ok(lines[3]!.includes(',no,,'));
 });
+
+test('limited public access remains visible in tracker, report and snapshot changes', () => {
+  const limited = structuredClone(base); limited.reviews = []; limited.attachments = []; limited.reviewsUnavailable = true;
+  const csv = trackerCsv(limited, null);
+  assert.match(csv, /BL2024-1706,FINALED,Public review details unavailable/);
+  const diff = diffSnapshots(base, limited);
+  assert.ok(diff.permit.some(x => x.field === 'publicReviewAccess' && x.to === 'unavailable'));
+  const restored = { ...limited, reviewsUnavailable: false };
+  assert.equal(diffSnapshots(limited, restored).changed, true);
+});
 test('the latest completed run of the same case is chosen for comparison', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'permit-pilot-'));
   const make = async (name: string, status: string, withSnapshot = true) => { await mkdir(join(dir, name)); await writeFile(join(dir, name, 'manifest.json'), JSON.stringify({ status })); if (withSnapshot) await writeFile(join(dir, name, 'snapshot.json'), '{}'); };

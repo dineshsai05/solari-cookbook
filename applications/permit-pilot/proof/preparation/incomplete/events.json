@@ -1,0 +1,46 @@
+[
+  {
+    "name": "started",
+    "at": "2026-09-29T04:20:17.576Z"
+  },
+  {
+    "name": "browser_created",
+    "at": "2026-09-29T04:20:19.258Z"
+  },
+  {
+    "name": "source_captured",
+    "at": "2026-09-29T04:20:22.096Z"
+  },
+  {
+    "name": "source_captured",
+    "at": "2026-09-29T04:20:23.579Z"
+  },
+  {
+    "name": "source_captured",
+    "at": "2026-09-29T04:20:25.192Z"
+  },
+  {
+    "name": "source_captured",
+    "at": "2026-09-29T04:20:27.102Z"
+  },
+  {
+    "name": "official_form_verified",
+    "at": "2026-09-29T04:20:28.068Z"
+  },
+  {
+    "name": "sandbox_created",
+    "at": "2026-09-29T04:20:29.286Z"
+  },
+  {
+    "name": "documents_extracted",
+    "at": "2026-09-29T04:20:34.706Z"
+  },
+  {
+    "name": "draft_generated",
+    "at": "2026-09-29T04:20:39.175Z"
+  },
+  {
+    "name": "sandbox_destroyed",
+    "at": "2026-09-29T04:20:39.662Z"
+  }
+]

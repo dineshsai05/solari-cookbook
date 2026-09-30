@@ -14,6 +14,7 @@ export interface PortalCase {
   attachments: { id: string; match: string; role: string; sha256: string; pages: number }[];
   /** When no attachments are pinned, pick applicant responses and recent drawings from the page. */
   autoAttachments?: boolean;
+  allowUnavailableReviews?: boolean;
 }
 export interface AttachmentTarget { attachment: Attachment; id: string; role: string; pin: PortalCase['attachments'][number] | null }
 const slug = (s: string) => s.toLowerCase().replace(/\.pdf$/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'file';
@@ -69,7 +70,7 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
   page.setDefaultTimeout(30_000);
   const searchUrl = c.origin + c.searchPath;
   const response = await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  if (!response?.ok() || !isPortalUrl(c.origin, page.url())) throw new Error('Portal search page unavailable');
+  if (!response?.ok() || !isPortalUrl(c.origin, page.url())) throw new Error(`Portal search page unavailable (HTTP ${response?.status() ?? 'no response'}; host ${new URL(page.url()).hostname})`);
   // The public search form: this is the only form the adapter submits.
   const options = (selector: string) => page.locator(`${selector} option`).evaluateAll(os => os.map(o => ({ label: o.textContent || '', value: (o as HTMLOptionElement).value })));
   const by = pickOption(await options('#cplMain_ddSearchBy'), 'permitNumber');
@@ -98,6 +99,14 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
     finaledDate: await label(page, 'lblPermitFinaledDate'), expirationDate: await label(page, 'lblPermitExpirationDate'),
   };
   if (!permit.status) throw new Error('Permit status label not found; portal layout may have changed');
+  if (!permit.siteAddress) {
+    const siteTab = page.locator('.rtsTxt', { hasText: /^Site Info$/ }).first();
+    if (await siteTab.count()) {
+      await siteTab.click();
+      permit.siteAddress = await label(page, 'hlSiteAddress');
+      await page.locator('.rtsTxt', { hasText: /^Permit Info$/ }).first().click();
+    }
+  }
   if (c.expectedSiteAddress && permit.siteAddress && !collapse(permit.siteAddress).toUpperCase().includes(c.expectedSiteAddress.toUpperCase())) throw new Error('Permit site address does not match the qualified case');
   await page.screenshot({ path: join(out, 'portal-permit-info.png'), fullPage: true });
   await event('portal_permit_info_captured', { status: permit.status });
@@ -117,7 +126,12 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
   if (new Set(attachments.map(a => a.key)).size !== attachments.length) throw new Error('Duplicate attachment keys on the permit page');
   await event('portal_attachments_listed', { count: attachments.length, void: attachments.filter(a => a.void).length });
 
-  await page.locator('.rtsTxt', { hasText: /^Reviews\s*(\(\d+\))?$/ }).first().click();
+  const reviews: Review[] = [];
+  const reviewTab = page.locator('.rtsTxt', { hasText: /^Reviews\s*(\(\d+\))?$/ }).first();
+  const reviewsUnavailable = (await reviewTab.count()) === 0;
+  if (reviewsUnavailable && !c.allowUnavailableReviews) throw new Error('Expected public Reviews tab is unavailable');
+  if (!reviewsUnavailable) {
+  await reviewTab.click();
   const grid = page.locator('table[id$="rgReviewInfo_ctl00"] tbody tr');
   await grid.first().waitFor({ state: 'visible', timeout: 30_000 });
   await page.screenshot({ path: join(out, 'portal-reviews.png'), fullPage: true });
@@ -127,7 +141,6 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
     const m = /openMoreInfo\('REVIEW','([^']+)','([^']+)','([^']+)'/.exec(link?.getAttribute('onclick') || '');
     return { cells, group: m?.[1] || null, activity: m?.[2] || null, recordId: m?.[3] || null };
   }));
-  const reviews: Review[] = [];
   // Each review's detail is a standalone public page that the More Info popup loads in an iframe. Opening it directly in the same context is equivalent and avoids fragile popup handling.
   const detail = await page.context().newPage();
   detail.setDefaultTimeout(30_000);
@@ -135,7 +148,7 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
   try {
     for (const row of rows) {
       if (!row.recordId || !row.group || row.activity !== c.permitNumber || row.cells.length < 6) throw new Error('Review row did not expose a record ID for this permit');
-      const detailUrl = `${c.origin}/eTRAKiT/moreinfo/reviewInfo.aspx?Group=${encodeURIComponent(row.group)}&ActivityNo=${encodeURIComponent(row.activity)}&RecordID=${encodeURIComponent(row.recordId)}&Respond=null`;
+      const detailUrl = `${new URL('../moreinfo/reviewInfo.aspx', new URL(c.searchPath, c.origin)).href}?Group=${encodeURIComponent(row.group)}&ActivityNo=${encodeURIComponent(row.activity)}&RecordID=${encodeURIComponent(row.recordId)}&Respond=null`;
       const r = await detail.goto(detailUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 });
       if (!r?.ok() || !isPortalUrl(c.origin, detail.url())) throw new Error('Review detail page unavailable');
       const text = await detail.locator('body').innerText();
@@ -148,6 +161,8 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
     if (!detailShot) await detail.screenshot({ path: join(out, 'portal-review-detail.png'), fullPage: true });
   } finally { await detail.close(); }
   if (!reviews.length) throw new Error('No review rows found');
+  }
+  if (reviewsUnavailable) await event('portal_reviews_unavailable', { reason: 'No public Reviews tab is exposed for this permit' });
   await event('portal_reviews_captured', { count: reviews.length, withNotes: reviews.filter(r => r.notes).length });
 
   // Download the pinned documents, or an automatic bounded selection, inside the browser session so the portal's own attachment handler serves them.
@@ -185,6 +200,6 @@ export async function captureSnapshot(page: Page, c: PortalCase, out: string, ev
     await writeFile(join(out, 'attachments', `${target.id}.pdf`), bytes);
     await event('portal_attachment_downloaded', { id: target.id, role: target.role, bytes: bytes.length, matchesPinned: target.attachment.downloaded.matchesPinned, void: target.attachment.void });
   }
-  const snapshot = SnapshotSchema.parse({ version: 1, capturedAt: new Date().toISOString(), permitNumber: c.permitNumber, portalUrl: page.url(), sessionId, permit, reviews, attachments, replay: null });
+  const snapshot = SnapshotSchema.parse({ version: 1, capturedAt: new Date().toISOString(), permitNumber: c.permitNumber, portalUrl: page.url(), sessionId, permit, reviews, reviewsUnavailable, attachments, replay: null });
   return { snapshot, files };
 }

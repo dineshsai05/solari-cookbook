@@ -1,0 +1,13 @@
+{
+  "name": "City of Lakewood, Colorado permit 26064",
+  "authority": "City of Lakewood, Colorado (public status and available documents)",
+  "origin": "https://lakw-trk.aspgov.com",
+  "searchPath": "/eTRAKiT/Search/permit.aspx",
+  "permitNumber": "26064",
+  "expectedSiteAddress": "363 S HARLAN ST",
+  "qualifiedAt": "2026-09-30",
+  "notes": "Public permit status only. Lakewood's portal exposes no Reviews tab or attachments for the verified example (a 1991 plan-review record for an elevator installation), so comment-to-response matching is unavailable. Chosen to show status-only monitoring on a third eTRAKiT deployment.",
+  "attachments": [],
+  "autoAttachments": true,
+  "allowUnavailableReviews": true
+}

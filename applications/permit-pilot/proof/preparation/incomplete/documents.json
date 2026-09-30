@@ -1,0 +1,26 @@
+[
+  {
+    "id": "document-1",
+    "name": "plans.pdf",
+    "role": "plans",
+    "sha256": "c875b4030d607be1a10a3726804c9c4677d7f42c5a2e91c6baf728741eaade93",
+    "encrypted": false,
+    "error": null,
+    "pages": [
+      {
+        "number": 1,
+        "width": 612,
+        "height": 792,
+        "text": "SYNTHETIC TEST FIXTURE - NOT A CONSTRUCTION DRAWING\nDrawing type: structural\nProject address: 123 Example Lane (fictional)\nProject: Demonstration attached uncovered wood deck\nIllustrative deck footprint: 12 feet by 16 feet; area 192 square feet.\nIllustrative walking surface: 48 inches above adjacent grade.\nThese labels test text extraction and evidence linkage only.\nNo structural dimensions, calculations or construction approval are provided.\nIllustration only - not to scale\n",
+        "textTruncated": false
+      },
+      {
+        "number": 2,
+        "width": 792,
+        "height": 612,
+        "text": "SYNTHETIC TEST FIXTURE - NOT A CONSTRUCTION DRAWING\nDrawing type: elevation\nProject address: 321 Example Lane (fictional)\nProject: Demonstration attached uncovered wood deck\nIllustrative deck footprint: 12 feet by 16 feet; area 192 square feet.\nIllustrative walking surface: 48 inches above adjacent grade.\nThese labels test text extraction and evidence linkage only.\nNo structural dimensions, calculations or construction approval are provided.\n Illustration only - not to scale\n",
+        "textTruncated": false
+      }
+    ]
+  }
+]
