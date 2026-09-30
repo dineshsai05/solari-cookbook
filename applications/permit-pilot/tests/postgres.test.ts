@@ -59,6 +59,7 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { Script } from 'node:vm';
 test('private workspace HTTP API requires a key and returns conflicts for stale edits', { skip: !url, timeout: 20_000 }, async () => {
   const root=fileURLToPath(new URL('../',import.meta.url));const dir=await mkdtemp(join(tmpdir(),'permit-pg-http-'));let child:ChildProcess|undefined;
+  let oldRunner: PostgresStore | undefined = new PostgresStore(url!); await oldRunner.open();
   try {
     await mkdir(join(dir,'src'));await cp(join(root,'cases'),join(dir,'cases'),{recursive:true});
     for(const f of ['server.ts','web-state.ts','portal-cases.ts','admin-ui.ts','postgres-store.ts'])await copyFile(join(root,'src',f),join(dir,'src',f));
@@ -68,6 +69,17 @@ test('private workspace HTTP API requires a key and returns conflicts for stale 
       child=spawn(process.execPath,['--import','tsx','src/server.ts'],{cwd:dir,env:{...process.env,PORT:'0',DATABASE_URL:url!,PERMITPILOT_ADMIN_KEY:key,PERMITPILOT_LIVE:'0',PERMITPILOT_DATA_DIR:join(dir,'data')},stdio:['ignore','pipe','pipe']});
       let out='';child.stdout!.on('data',b=>{out+=b;const m=/http:\/\/localhost:(\d+)/.exec(out);if(m)resolve('http://127.0.0.1:'+m[1]);});child.stderr!.on('data',b=>{out+=b;});child.once('error',reject);child.once('exit',code=>{if(code)reject(new Error(out));});
     });
+    const waiting=await fetch(base+'/healthz');assert.equal(waiting.status,200);
+    assert.equal((await waiting.json() as {standby:boolean}).standby,true);
+    assert.equal((await fetch(base+'/api/jobs',{method:'POST',headers:{'content-type':'application/json'},body:'{}'})).status,503);
+    await oldRunner.close();oldRunner=undefined;
+    let active=false;
+    for(let i=0;i<30;i++) {
+      const h=await fetch(base+'/healthz').then(r=>r.json()) as {standby:boolean};
+      if(!h.standby){active=true;break;}
+      await new Promise(r=>setTimeout(r,100));
+    }
+    assert.ok(active,'standby server takes over after the previous process releases its lease');
     assert.equal((await fetch(base+'/api/admin/jobs')).status,401);
     assert.equal((await fetch(base+'/api/admin/jobs',{headers:{authorization:'Bearer wrong'}})).status,401);
     const auth={authorization:'Bearer '+key,'content-type':'application/json'};
@@ -87,5 +99,5 @@ test('private workspace HTTP API requires a key and returns conflicts for stale 
     assert.equal((await patch()).status,200);assert.equal((await patch()).status,409);
     assert.equal((await fetch(base+'/api/admin/tasks/'+task.id+'/audit')).status,401);
     const audit=await fetch(base+'/api/admin/tasks/'+task.id+'/audit',{headers:auth}).then(r=>r.json()) as unknown[];assert.equal(audit.length,2);
-  } finally { if(child&&child.exitCode===null){const end=new Promise<void>(r=>child!.once('exit',()=>r()));child.kill('SIGTERM');await end;}await rm(dir,{recursive:true,force:true}); }
+  } finally { await oldRunner?.close(); if(child&&child.exitCode===null){const end=new Promise<void>(r=>child!.once('exit',()=>r()));child.kill('SIGTERM');await end;}await rm(dir,{recursive:true,force:true}); }
 });

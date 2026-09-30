@@ -13,11 +13,15 @@ export class PostgresStore {
     this.pool = new pg.Pool({ connectionString, max: 5, connectionTimeoutMillis: 5000, query_timeout: 10000 });
     this.pool.on('error', () => {}); // Failed queries still reject; the worker lease has its own fail-stop handler.
   }
-  async open() {
+  get ready() { return this.healthy; }
+  async open(standby = false) {
+    if (this.healthy) return true;
+    if (!this.lease) {
     this.lease = await this.pool.connect();
     this.lease.on('error', () => { this.healthy = false; this.onLeaseLost(); });
+    }
     const lock = await this.lease.query('SELECT pg_try_advisory_lock(714026091) AS acquired');
-    if (!lock.rows[0].acquired) { await this.close(); throw new Error('Another PermitPilot runner owns this database. Only one active runner is supported.'); }
+    if (!lock.rows[0].acquired) { if (standby) return false; await this.close(); throw new Error('Another PermitPilot runner owns this database. Only one active runner is supported.'); }
     await this.lease.query(`
       CREATE TABLE IF NOT EXISTS pp_jobs (
         id text PRIMARY KEY, payload jsonb NOT NULL, status text NOT NULL CHECK(status IN ('queued','running','completed','failed')),
@@ -40,6 +44,7 @@ export class PostgresStore {
       );
     `);
     this.healthy = true;
+    return true;
   }
   private assertHealthy() { if (!this.healthy) throw new Error('Database runner lease is unavailable'); }
   async restore(root: string) {
@@ -140,7 +145,7 @@ export class PostgresStore {
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
   async audit(id: string) { return (await this.pool.query('SELECT action,before_value,after_value,at FROM pp_task_audit WHERE task_id=$1 ORDER BY id', [id])).rows; }
-  async ping() { this.assertHealthy(); await this.lease!.query('SELECT 1'); }
+  async ping() { if (!this.lease) throw new Error('Database connection unavailable'); await this.lease.query('SELECT 1'); }
   async close() { this.healthy = false; this.lease?.release(true); this.lease = undefined; await this.pool.end(); }
 }
 export type TaskInput = Pick<PermitTask, 'title' | 'owner' | 'dueDate' | 'status' | 'notes'>;

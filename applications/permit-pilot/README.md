@@ -352,7 +352,7 @@ public report links do not expose task notes or the capture email address.
 PostgreSQL holds capture metadata, the durable queue, daily admission counts and
 tasks. New completed reports are also archived in PostgreSQL, including screenshots and the activity trail. Local `/data` files are a cache for those reports. Existing runs created before database archiving still need their original report volume. A process restart resumes queued captures; an interrupted
 running capture is marked failed rather than automatically spending more credits.
-The runner holds a database session lock, refuses a second active runner and stops
+The runner holds a database session lock, keeps a second server in standby during deployment and stops
 its local worker if the lock connection is lost. Admission is serialized in a
 transaction and committed before execution. Do not use transaction-pooling proxies
 for the session-lock connection; use a direct PostgreSQL connection.
@@ -383,8 +383,10 @@ Use a **Free Web Service**, the `permit-pilot` branch and root directory
 `applications/permit-pilot`. Select the Docker runtime, Dockerfile `./Dockerfile`,
 and Docker context `.`. Leave Docker Command empty. Set the health check to
 `/healthz`. No paid disk, background worker or Render Postgres service is needed.
-Use only one instance. A rolling deployment may briefly wait for the old instance
-to release its database runner lock; do not enable multiple replicas.
+Use only one instance. During a rolling deployment the new server reports healthy with `standby: true`
+and live captures disabled. After Render stops the old process, the new server
+acquires the runner lock, restores the queue and begins accepting requests. Standby
+servers do not restore or execute jobs. Do not enable multiple replicas.
 
 Copy these values from the private local `.env` into Render environment settings:
 `DATABASE_URL` (Neon direct connection with SSL, pooling disabled),

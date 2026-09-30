@@ -31,10 +31,11 @@ if (process.env.DATABASE_URL) {
   if (ADMIN_KEY.length < 32) throw new Error('PostgreSQL mode requires PERMITPILOT_ADMIN_KEY with at least 32 characters');
   const { PostgresStore } = await import('./postgres-store.js');
   database = new PostgresStore(process.env.DATABASE_URL, () => { running?.child.kill('SIGKILL'); process.exit(1); });
-  await database.open();
+  await database.open(true);
 }
 if (database) setInterval(() => { void database!.ping().catch(() => { running?.child.kill('SIGKILL'); process.exit(1); }); }, 15_000).unref();
-const jobs = database ? await database.restore(WEB) : await restoreJobs(WEB);
+const jobs = database ? (database.ready ? await database.restore(WEB) : new Map<string, Job>()) : await restoreJobs(WEB);
+let runnerReady = !database || database.ready;
 const queue: Job[] = [...jobs.values()].filter(j => j.status === 'queued');
 async function saveJob(job: Job) { if (database) await database.save(job); await saveLocalJob(job); }
 function authorized(req: IncomingMessage) {
@@ -130,7 +131,7 @@ async function readJobDir(job: Job) {
   return events;
 }
 async function pump() {
-  if (stopping || starting || running || !queue.length) return;
+  if (!runnerReady || stopping || starting || running || !queue.length) return;
   starting = true;
   const job = queue.shift()!; job.status = 'running'; job.startedAt = new Date().toISOString();
   try { await mkdir(job.dir, { recursive: true }); await saveJob(job); } catch { starting = false; job.status = 'failed'; job.error = 'Could not persist run state.'; void pump(); return; }
@@ -171,8 +172,9 @@ const server = createServer(async (req, res) => {
     if (req.method === 'GET' && path === '/') return html(res, 200, formPage(portals));
     if (req.method === 'GET' && path === '/healthz') {
       try { if (database) await database.ping(); } catch { return json(res, 503, { ok: false, live: false }); }
-      return json(res, 200, { ok: true, live: LIVE, dailyLimit, running: running ? 1 : 0, queued: queue.length, storage: database ? 'postgresql' : 'filesystem' });
+      return json(res, 200, { ok: true, live: LIVE && runnerReady, standby: !runnerReady, dailyLimit, running: running ? 1 : 0, queued: queue.length, storage: database ? 'postgresql' : 'filesystem' });
     }
+    if (!runnerReady) return json(res, 503, { error: 'Deployment handover in progress. Please retry shortly.' });
     if (path === '/workspace' && req.method === 'GET' && database) return html(res, 200, adminPage(STYLE));
     if (path.startsWith('/api/admin/')) {
       if (!database) return json(res, 404, { error: 'Workspace requires PostgreSQL.' });
@@ -244,8 +246,29 @@ const server = createServer(async (req, res) => {
 server.requestTimeout = 15_000; server.headersTimeout = 10_000;
 server.listen(PORT, () => { console.log(`PermitPilot web demo on http://localhost:${(server.address() as import('node:net').AddressInfo).port} (desktop step ${DESKTOP ? 'on' : 'off'})`); if (LIVE) void pump(); });
 
+// Render needs a healthy HTTP process before it terminates the previous version.
+// A standby process serves health only; it must not restore or run jobs yet.
+let acquiring = false;
+const takeover = database && !runnerReady ? setInterval(async () => {
+  if (acquiring || stopping || runnerReady) return;
+  acquiring = true;
+  try {
+    if (await database!.open(true)) {
+      const restored = await database!.restore(WEB);
+      for (const [id, job] of restored) jobs.set(id, job);
+      queue.push(...[...restored.values()].filter(j => j.status === 'queued'));
+      runnerReady = true;
+      if (takeover) clearInterval(takeover);
+      console.log('Deployment handover complete; database runner acquired.');
+      if (LIVE && !stopping) void pump();
+    }
+  } catch { running?.child.kill('SIGKILL'); process.exit(1); }
+  finally { acquiring = false; }
+}, 2000) : null;
+takeover?.unref();
+
 function shutdown() {
-  if (stopping) return; stopping = true;
+  if (stopping) return; stopping = true; if (takeover) clearInterval(takeover);
   server.close(); running?.child.kill('SIGTERM');
   setTimeout(() => {
     running?.child.kill('SIGKILL');
